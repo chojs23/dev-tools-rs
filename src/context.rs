@@ -1,4 +1,5 @@
 use eframe::{egui, epaint::TextureManager, CreationContext};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     app::{CentralPanelTab, DARK_VISUALS, LIGHT_VISUALS},
@@ -10,8 +11,24 @@ use crate::{
 pub struct AppCtx {
     pub settings: Settings,
     pub screen_size: ScreenSize,
+    pub sidepanel: SidePanelData,
     // pub jwt: JwtEncoderDecoder,
     pub central_panel_tab: CentralPanelTab,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SidePanelData {
+    /// Is the side panel visible
+    pub show: bool,
+    /// If true palette name is currently being edited
+    pub edit_palette_name: bool,
+    /// When triggering palette name edit this is used to
+    /// switch focus to the textedit
+    pub trigger_edit_focus: bool,
+    /// Width of the button toolbar on the sidebar
+    pub box_width: f32,
+    /// Size of the whole Sidebar response
+    pub response_size: egui::Vec2,
 }
 
 impl Default for AppCtx {
@@ -19,6 +36,13 @@ impl Default for AppCtx {
         Self {
             settings: Settings::default(),
             screen_size: ScreenSize::Desktop(0., 0.),
+            sidepanel: SidePanelData {
+                show: false,
+                edit_palette_name: false,
+                trigger_edit_focus: false,
+                box_width: 0.,
+                response_size: (0., 0.).into(),
+            },
             central_panel_tab: CentralPanelTab::Jwt,
         }
     }
@@ -32,6 +56,13 @@ impl AppCtx {
         Self {
             settings: settings::load_global(context.storage).unwrap_or_default(),
             screen_size: ScreenSize::Desktop(0., 0.),
+            sidepanel: SidePanelData {
+                show: false,
+                edit_palette_name: false,
+                trigger_edit_focus: false,
+                box_width: 0.,
+                response_size: (0., 0.).into(),
+            },
             central_panel_tab: CentralPanelTab::Jwt,
         }
     }

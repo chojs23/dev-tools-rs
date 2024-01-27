@@ -1,8 +1,9 @@
+mod windows;
+
 use std::sync::RwLock;
 
 use eframe::{
-    egui::Visuals,
-    egui::{self, Layout, Margin, Ui},
+    egui::{self, Button, CursorIcon, Layout, Margin, Rgba, Ui, Visuals},
     epaint::TextureManager,
     CreationContext, Theme,
 };
@@ -14,6 +15,8 @@ use crate::{
     screen_size::ScreenSize,
     ui::*,
 };
+
+use self::colors::*;
 
 pub static LIGHT_VISUALS: Lazy<Visuals> = Lazy::new(light_visuals);
 pub static DARK_VISUALS: Lazy<Visuals> = Lazy::new(dark_visuals);
@@ -29,7 +32,15 @@ pub enum CentralPanelTab {
     ColorPicker,
 }
 
-pub struct App {}
+#[derive(Default)]
+pub struct Windows {
+    // pub settings: SettingsWindow,
+    // pub help: HelpWindow,
+}
+
+pub struct App {
+    windows: Windows,
+}
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
@@ -69,7 +80,9 @@ impl App {
     pub fn init(context: &CreationContext) -> Box<dyn eframe::App + 'static> {
         let mut app_ctx = AppCtx::new(context);
 
-        let app = Box::new(Self {});
+        let app = Box::new(Self {
+            windows: Windows::default(),
+        });
 
         let prefer_dark = context
             .integration_info
@@ -182,14 +195,14 @@ impl App {
             // );
 
             ui.with_layout(Layout::right_to_left(eframe::emath::Align::Center), |ui| {
-                if ui
-                    .button(icon::HELP)
-                    .on_hover_text("Show help")
-                    .on_hover_cursor(CursorIcon::Help)
-                    .clicked()
-                {
-                    self.windows.help.toggle_window();
-                }
+                // if ui
+                //     .button(icon::HELP)
+                //     .on_hover_text("Show help")
+                //     .on_hover_cursor(CursorIcon::Help)
+                //     .clicked()
+                // {
+                //     self.windows.help.toggle_window();
+                // }
                 if ui
                     .button(icon::EXPAND)
                     .on_hover_text("Show/hide side panel")
@@ -204,11 +217,27 @@ impl App {
                     .on_hover_cursor(CursorIcon::PointingHand)
                     .clicked()
                 {
-                    self.windows.settings.show = true;
+                    // self.windows.settings.show = true;
                 }
                 self.dark_light_switch(ctx, ui);
             });
         });
+    }
+
+    fn dark_light_switch(&mut self, ctx: &mut FrameCtx, ui: &mut Ui) {
+        let btn = if ctx.is_dark_mode() {
+            icon::LIGHT_MODE
+        } else {
+            icon::DARK_MODE
+        };
+        if ui
+            .button(btn)
+            .on_hover_text("Switch ui color theme")
+            .on_hover_cursor(CursorIcon::PointingHand)
+            .clicked()
+        {
+            ctx.set_theme();
+        }
     }
 
     fn top_panel(&mut self, ctx: &mut FrameCtx<'_>) {
@@ -241,8 +270,8 @@ impl App {
         egui::CentralPanel::default()
             .frame(_frame)
             .show(ctx.egui, |ui| match ctx.app.central_panel_tab {
-                CentralPanelTab::ColorPicker => todo!(),
                 CentralPanelTab::Jwt => self.jwt_ui(ctx, ui),
+                CentralPanelTab::ColorPicker => self.color_picker_ui(ctx, ui),
             });
     }
 
@@ -254,5 +283,15 @@ impl App {
         //     *jwt = JwtEncoderDecoder::from_str(&jwt_str);
         // }
         ui.label("JWT");
+    }
+
+    fn color_picker_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut egui::Ui) {
+        // let jwt = &mut ctx.app.jwt;
+        // let mut jwt_str = jwt.to_string();
+        // ui.text_edit_singleline(&mut jwt_str);
+        // if jwt_str != jwt.to_string() {
+        //     *jwt = JwtEncoderDecoder::from_str(&jwt_str);
+        // }
+        ui.label("ColorPicker");
     }
 }
