@@ -122,9 +122,30 @@ impl Default for ColorSpaceSettings {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Settings {
+    #[serde(default)]
+    pub color_display_format: ColorDisplayFmtEnum,
+    #[serde(default)]
+    pub color_clipboard_format: Option<ColorDisplayFmtEnum>,
+    // #[serde(default)]
+    // pub palette_clipboard_format: PaletteFormat,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "HashMap::is_empty")]
+    pub saved_color_formats: HashMap<String, String>,
+    // #[serde(default)]
+    // #[serde(skip_serializing_if = "HashMap::is_empty")]
+    // pub saved_palette_formats: HashMap<String, CustomPaletteFormat>,
     #[serde(default = "enabled")]
     #[serde(skip_serializing_if = "is_true")]
     pub is_dark_mode: bool,
+    #[serde(default = "enabled")]
+    #[serde(skip_serializing_if = "is_true")]
+    pub cache_colors: bool,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
+    pub auto_copy_picked_color: bool,
+    #[serde(default = "default_pixels_per_point")]
+    #[serde(skip_serializing_if = "is_default_pixels_per_point")]
+    pub pixels_per_point: f32,
 }
 
 fn default_pixels_per_point() -> f32 {
@@ -140,23 +161,23 @@ impl Default for Settings {
         // let ws = RgbWorkingSpace::default();
         Self {
             is_dark_mode: true,
-            // color_display_format: ColorDisplayFmtEnum::default(),
-            // color_clipboard_format: None,
+            color_display_format: ColorDisplayFmtEnum::default(),
+            color_clipboard_format: None,
             // palette_clipboard_format: PaletteFormat::default(),
-            // saved_color_formats: HashMap::default(),
+            saved_color_formats: HashMap::default(),
             // saved_palette_formats: HashMap::default(),
             // color_spaces: ColorSpaceSettings::default(),
             // rgb_working_space: ws,
             // chromatic_adaptation_method: ChromaticAdaptationMethod::default(),
             // illuminant: ws.reference_illuminant(),
-            // cache_colors: true,
+            cache_colors: true,
             // harmony: ColorHarmony::default(),
             // harmony_layout: HarmonyLayout::default(),
             // harmony_color_size: DEFAULT_COLOR_SIZE,
             // harmony_display_color_label: false,
             // harmony_display_box: true,
-            // auto_copy_picked_color: false,
-            // pixels_per_point: DEFAULT_PIXELS_PER_POINT,
+            auto_copy_picked_color: false,
+            pixels_per_point: DEFAULT_PIXELS_PER_POINT,
         }
     }
 }

@@ -9,14 +9,15 @@ use eframe::{
 };
 use once_cell::sync::{Lazy, OnceCell};
 
+use windows::SettingsWindow;
+
 use crate::{
+    app::colors::*,
     context::{AppCtx, FrameCtx},
     error::append_global_error,
     screen_size::ScreenSize,
     ui::*,
 };
-
-use self::colors::*;
 
 pub static LIGHT_VISUALS: Lazy<Visuals> = Lazy::new(light_visuals);
 pub static DARK_VISUALS: Lazy<Visuals> = Lazy::new(dark_visuals);
@@ -34,7 +35,7 @@ pub enum CentralPanelTab {
 
 #[derive(Default)]
 pub struct Windows {
-    // pub settings: SettingsWindow,
+    pub settings: SettingsWindow,
     // pub help: HelpWindow,
 }
 
@@ -72,6 +73,8 @@ impl eframe::App for App {
             self.top_panel(&mut ctx);
 
             self.central_panel(&mut ctx);
+
+            self.display_windows(&mut ctx);
         }
     }
 }
@@ -217,7 +220,7 @@ impl App {
                     .on_hover_cursor(CursorIcon::PointingHand)
                     .clicked()
                 {
-                    // self.windows.settings.show = true;
+                    self.windows.settings.show = true;
                 }
                 self.dark_light_switch(ctx, ui);
             });
@@ -238,6 +241,24 @@ impl App {
         {
             ctx.set_theme();
         }
+    }
+
+    fn display_windows(&mut self, ctx: &mut FrameCtx<'_>) {
+        self.windows.settings.display(ctx);
+        // self.windows.settings.custom_formats_window.display(
+        //     &mut ctx.app.settings,
+        //     ctx.egui,
+        //     ctx.app.picker.current_color,
+        // );
+        // self.windows.settings.palette_formats_window.display(ctx);
+        // if let Err(e) = self.windows.export.display(ctx) {
+        //     append_global_error(e);
+        // }
+
+        // self.shades_window(ctx);
+        // self.tints_window(ctx);
+        // self.hues_window(ctx);
+        // self.windows.help.display(ctx.egui);
     }
 
     fn top_panel(&mut self, ctx: &mut FrameCtx<'_>) {
@@ -273,6 +294,7 @@ impl App {
             },
             ..Default::default()
         };
+
         egui::CentralPanel::default()
             .frame(_frame)
             .show(ctx.egui, |ui| match ctx.app.central_panel_tab {
