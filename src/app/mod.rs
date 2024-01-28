@@ -259,6 +259,12 @@ impl App {
 
     fn central_panel(&mut self, ctx: &mut FrameCtx<'_>) {
         let _frame = egui::Frame {
+            fill: if ctx.egui.style().visuals.dark_mode {
+                *D_BG_0
+            } else {
+                *L_BG_2
+            },
+
             inner_margin: Margin {
                 left: 10.,
                 top: 5.,
