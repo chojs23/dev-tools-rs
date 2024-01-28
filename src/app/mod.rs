@@ -3,8 +3,8 @@ mod windows;
 use std::sync::RwLock;
 
 use eframe::{
-    egui::{self, Button, CursorIcon, Layout, Margin, Rgba, Ui, Visuals},
-    epaint::TextureManager,
+    egui::{self, Button, CursorIcon, Id, Label, Layout, Margin, Rgba, RichText, Ui, Visuals},
+    epaint::{Color32, TextureManager},
     CreationContext, Theme,
 };
 use once_cell::sync::{Lazy, OnceCell};
@@ -15,6 +15,7 @@ use crate::{
     app::colors::*,
     context::{AppCtx, FrameCtx},
     error::{append_global_error, DisplayError, ERROR_STACK},
+    jwt::Algorithm,
     screen_size::ScreenSize,
     ui::*,
 };
@@ -25,6 +26,7 @@ pub static TEXTURE_MANAGER: Lazy<RwLock<TextureManager>> =
     Lazy::new(|| RwLock::new(TextureManager::default()));
 pub static CONTEXT: OnceCell<RwLock<AppCtx>> = OnceCell::new();
 
+static ERROR_DISPLAY_DURATION: u64 = 10;
 pub const DEFAULT_PIXELS_PER_POINT: f32 = 1.0;
 
 #[derive(Clone, Debug)]
@@ -332,23 +334,105 @@ impl App {
             });
     }
 
+    fn error_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
+        let mut top_padding = 0.;
+        let mut err_idx = 0;
+        self.display_errors.retain(|e| {
+            let elapsed = crate::elapsed(e.timestamp());
+            if elapsed >= ERROR_DISPLAY_DURATION {
+                false
+            } else {
+                if let Some(rsp) = egui::Window::new("Error")
+                    .collapsible(true)
+                    .id(Id::new(format!("err_ntf_{err_idx}")))
+                    .anchor(
+                        egui::Align2::RIGHT_BOTTOM,
+                        (-ctx.app.sidepanel.box_width - 25., -top_padding),
+                    )
+                    .hscroll(true)
+                    .fixed_size((ctx.app.sidepanel.box_width + 7000., 50.))
+                    .show(ui.ctx(), |ui| {
+                        let label =
+                            Label::new(RichText::new(e.message()).color(Color32::RED)).wrap(true);
+                        ui.add(label);
+                    })
+                {
+                    top_padding += rsp.response.rect.height() + 8.;
+                    err_idx += 1;
+                };
+                true
+            }
+        });
+    }
+
     fn jwt_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut egui::Ui) {
-        // let jwt = &mut ctx.app.jwt;
-        // let mut jwt_str = jwt.to_string();
-        // ui.text_edit_singleline(&mut jwt_str);
-        // if jwt_str != jwt.to_string() {
-        //     *jwt = JwtEncoderDecoder::from_str(&jwt_str);
-        // }
-        ui.label("JWT");
+        self.error_ui(ctx, ui);
+
+        ui.heading("JWT Encoder/Decoder");
+
+        ui.add_space(DOUBLE_SPACE);
+
+        ui.horizontal(|ui| {
+            ui.vertical(|ui| {
+                ui.vertical(|ui| {
+                    ui.label("Encoded");
+                    ui.text_edit_multiline(&mut ctx.app.jwt.encoded);
+                });
+
+                ui.add_space(HALF_SPACE);
+
+                ui.horizontal(|ui| {
+                    ui.label("Algorithm");
+                    ui.radio_value(&mut ctx.app.jwt.algorithm, Algorithm::HS256, "HS256");
+                    ui.radio_value(&mut ctx.app.jwt.algorithm, Algorithm::HS384, "HS384");
+                    ui.radio_value(&mut ctx.app.jwt.algorithm, Algorithm::HS512, "HS512");
+                    ui.radio_value(&mut ctx.app.jwt.algorithm, Algorithm::RS256, "RS256");
+                    ui.radio_value(&mut ctx.app.jwt.algorithm, Algorithm::RS384, "RS384");
+                    ui.radio_value(&mut ctx.app.jwt.algorithm, Algorithm::RS512, "RS512");
+                });
+
+                ui.add_space(HALF_SPACE);
+
+                if ui
+                    .button("⬆ Encode")
+                    .on_hover_cursor(CursorIcon::PointingHand)
+                    .clicked()
+                {
+                    match ctx.app.jwt.encode() {
+                        Ok(_) => {}
+                        Err(e) => {
+                            append_global_error(e);
+                        }
+                    }
+                }
+
+                if ui
+                    .button("⬇ Decode")
+                    .on_hover_cursor(CursorIcon::PointingHand)
+                    .clicked()
+                {
+                    match ctx.app.jwt.decode() {
+                        Ok(_) => {}
+                        Err(e) => {
+                            println!("{:?}", e);
+                            append_global_error(e);
+                        }
+                    }
+                }
+
+                ui.vertical(|ui| {
+                    ui.label("Decoded");
+                    ui.text_edit_multiline(&mut ctx.app.jwt.decoded);
+                });
+            });
+
+            ui.vertical(|ui| {
+                ui.label("Secret");
+            });
+        });
     }
 
     fn color_picker_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut egui::Ui) {
-        // let jwt = &mut ctx.app.jwt;
-        // let mut jwt_str = jwt.to_string();
-        // ui.text_edit_singleline(&mut jwt_str);
-        // if jwt_str != jwt.to_string() {
-        //     *jwt = JwtEncoderDecoder::from_str(&jwt_str);
-        // }
         ui.label("ColorPicker");
     }
 }

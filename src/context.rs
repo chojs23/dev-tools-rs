@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     app::{CentralPanelTab, DARK_VISUALS, LIGHT_VISUALS},
+    jwt::JwtEncoderDecoder,
     screen_size::ScreenSize,
     settings::{self, Settings},
 };
@@ -12,7 +13,7 @@ pub struct AppCtx {
     pub settings: Settings,
     pub screen_size: ScreenSize,
     pub sidepanel: SidePanelData,
-    // pub jwt: JwtEncoderDecoder,
+    pub jwt: JwtEncoderDecoder,
     pub central_panel_tab: CentralPanelTab,
     pub zoom_window_dragged: bool,
 }
@@ -44,6 +45,7 @@ impl Default for AppCtx {
                 box_width: 0.,
                 response_size: (0., 0.).into(),
             },
+            jwt: JwtEncoderDecoder::default(),
             central_panel_tab: CentralPanelTab::Jwt,
             zoom_window_dragged: false,
         }
@@ -65,6 +67,7 @@ impl AppCtx {
                 box_width: 0.,
                 response_size: (0., 0.).into(),
             },
+            jwt: JwtEncoderDecoder::default(),
             central_panel_tab: CentralPanelTab::Jwt,
             zoom_window_dragged: false,
         }
@@ -136,8 +139,8 @@ impl<'frame> FrameCtx<'frame> {
         self.egui.set_style(style);
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn set_window_size(&mut self, size: egui::Vec2) {
-        if let Some(frame) = self.frame.as_mut() {}
-    }
+    // #[cfg(not(target_arch = "wasm32"))]
+    // pub fn set_window_size(&mut self, size: egui::Vec2) {
+    //     if let Some(frame) = self.frame.as_mut() {}
+    // }
 }
