@@ -14,7 +14,7 @@ use windows::SettingsWindow;
 use crate::{
     app::colors::*,
     context::{AppCtx, FrameCtx},
-    error::append_global_error,
+    error::{append_global_error, DisplayError, ERROR_STACK},
     screen_size::ScreenSize,
     ui::*,
 };
@@ -40,7 +40,8 @@ pub struct Windows {
 }
 
 pub struct App {
-    windows: Windows,
+    pub windows: Windows,
+    pub display_errors: Vec<DisplayError>,
 }
 
 impl eframe::App for App {
@@ -78,6 +79,30 @@ impl eframe::App for App {
 
             // #[cfg(not(target_arch = "wasm32"))]
             // ctx.set_window_size(ctx.egui.used_size());
+
+            if let Ok(mut stack) = ERROR_STACK.try_lock() {
+                while let Some(error) = stack.errors.pop_front() {
+                    self.display_errors.push(error);
+                }
+            }
+
+            #[cfg(not(target_arch = "wasm32"))]
+            if !ctx.egui.is_pointer_over_area() {
+                // This paint request makes sure that the color displayed as color under cursor
+                // gets updated even when the pointer is not in the egui window area.
+                ctx.egui.request_repaint();
+
+                if ctx.app.zoom_window_dragged {
+                    // When zooming we want to continually repaint for smooth experience
+                    // even if the pointer is not over main window area
+                    return;
+                }
+
+                // Otherwise sleep to save some cycles
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
+
+            // ctx.app.current_selected_color = ctx.app.picker.current_color;
         }
     }
 }
@@ -88,6 +113,7 @@ impl App {
 
         let app = Box::new(Self {
             windows: Windows::default(),
+            display_errors: Default::default(),
         });
 
         let prefer_dark = context

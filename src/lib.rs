@@ -1,7 +1,6 @@
 mod app;
 mod context;
 mod error;
-mod menu;
 mod screen_size;
 mod settings;
 mod ui;
