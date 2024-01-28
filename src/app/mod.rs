@@ -66,15 +66,18 @@ impl eframe::App for App {
                 ctx.set_styles(screen_size);
             }
 
-            // ctx.egui
-            //     .set_pixels_per_point(ctx.app.settings.pixels_per_point);
-            // ctx.app.check_settings_change();
+            ctx.egui
+                .set_pixels_per_point(ctx.app.settings.pixels_per_point);
+            ctx.app.check_settings_change();
 
             self.top_panel(&mut ctx);
 
             self.central_panel(&mut ctx);
 
             self.display_windows(&mut ctx);
+
+            // #[cfg(not(target_arch = "wasm32"))]
+            // ctx.set_window_size(ctx.egui.used_size());
         }
     }
 }

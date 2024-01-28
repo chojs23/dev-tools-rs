@@ -67,20 +67,20 @@ impl AppCtx {
         }
     }
 
-    // pub fn check_settings_change(&mut self) {
-    //     if self.settings.chromatic_adaptation_method
-    //         != self.picker.sliders.chromatic_adaptation_method
-    //     {
-    //         self.picker.sliders.chromatic_adaptation_method =
-    //             self.settings.chromatic_adaptation_method;
-    //     }
-    //     if self.settings.rgb_working_space != self.picker.sliders.rgb_working_space {
-    //         self.picker.new_workspace = Some(self.settings.rgb_working_space);
-    //         if self.settings.illuminant != self.picker.sliders.illuminant {
-    //             self.picker.new_illuminant = Some(self.settings.illuminant);
-    //         }
-    //     }
-    // }
+    pub fn check_settings_change(&mut self) {
+        // if self.settings.chromatic_adaptation_method
+        //     != self.picker.sliders.chromatic_adaptation_method
+        // {
+        //     self.picker.sliders.chromatic_adaptation_method =
+        //         self.settings.chromatic_adaptation_method;
+        // }
+        // if self.settings.rgb_working_space != self.picker.sliders.rgb_working_space {
+        //     self.picker.new_workspace = Some(self.settings.rgb_working_space);
+        //     if self.settings.illuminant != self.picker.sliders.illuminant {
+        //         self.picker.new_illuminant = Some(self.settings.illuminant);
+        //     }
+        // }
+    }
 }
 
 pub struct FrameCtx<'frame> {
@@ -135,7 +135,7 @@ impl<'frame> FrameCtx<'frame> {
 
     // #[cfg(not(target_arch = "wasm32"))]
     // pub fn set_window_size(&mut self, size: egui::Vec2) {
-    //     if let Some(frame) = &mut self.frame {
+    //     if let Some(frame) = self.frame.as_mut() {
     //         frame.set_window_size(size);
     //     }
     // }
