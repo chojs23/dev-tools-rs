@@ -36,9 +36,9 @@ pub struct JwtEncoderDecoder {
     pub encoded: String,
     pub decoded: String,
     pub algorithm: Algorithm,
-    pub secret: Option<String>,
-    pub public_key: Option<String>,
-    pub private_key: Option<String>,
+    pub secret: String,
+    pub public_key: String,
+    pub private_key: String,
 }
 
 impl JwtEncoderDecoder {
@@ -69,50 +69,41 @@ impl JwtEncoderDecoder {
     }
 
     fn encode_by_hmac(&mut self) -> Result<String> {
-        if self.secret.is_none() {
+        if self.secret.is_empty() {
             bail!("Secret is required");
         }
 
         let token = jsonwebtoken::encode(
             &jsonwebtoken::Header::new(self.algorithm.clone().into()),
             &self.decoded,
-            &jsonwebtoken::EncodingKey::from_secret(
-                self.secret.as_ref().unwrap_or(&String::new()).as_bytes(),
-            ),
+            &jsonwebtoken::EncodingKey::from_secret(self.secret.as_bytes()),
         )?;
 
         Ok(token)
     }
 
     fn encode_by_rsa(&mut self) -> Result<String> {
-        if self.private_key.is_none() {
+        if self.private_key.is_empty() {
             bail!("Private key is required");
         }
 
         let token = jsonwebtoken::encode(
             &jsonwebtoken::Header::new(self.algorithm.clone().into()),
             &self.decoded,
-            &jsonwebtoken::EncodingKey::from_rsa_pem(
-                self.private_key
-                    .as_ref()
-                    .unwrap_or(&String::new())
-                    .as_bytes(),
-            )?,
+            &jsonwebtoken::EncodingKey::from_rsa_pem(self.private_key.as_bytes())?,
         )?;
 
         Ok(token)
     }
 
     fn decode_by_hmac(&mut self) -> Result<String> {
-        if self.secret.is_none() {
+        if self.secret.is_empty() {
             bail!("Secret is required");
         }
 
         let token_data = jsonwebtoken::decode::<String>(
             &self.encoded,
-            &jsonwebtoken::DecodingKey::from_secret(
-                self.secret.as_ref().unwrap_or(&String::new()).as_bytes(),
-            ),
+            &jsonwebtoken::DecodingKey::from_secret(self.secret.as_bytes()),
             &jsonwebtoken::Validation::new(self.algorithm.clone().into()),
         )?;
 
@@ -120,18 +111,13 @@ impl JwtEncoderDecoder {
     }
 
     fn decode_by_rsa(&mut self) -> Result<String> {
-        if self.public_key.is_none() {
+        if self.public_key.is_empty() {
             bail!("Public key is required");
         }
 
         let token_data = jsonwebtoken::decode::<String>(
             &self.encoded,
-            &jsonwebtoken::DecodingKey::from_rsa_pem(
-                self.public_key
-                    .as_ref()
-                    .unwrap_or(&String::new())
-                    .as_bytes(),
-            )?,
+            &jsonwebtoken::DecodingKey::from_rsa_pem(self.public_key.as_bytes())?,
             &jsonwebtoken::Validation::new(self.algorithm.clone().into()),
         )?;
 

@@ -425,8 +425,15 @@ impl App {
                 });
             });
 
-            ui.vertical(|ui| {
-                ui.label("Secret");
+            ui.vertical(|ui| match ctx.app.jwt.algorithm {
+                Algorithm::HS256 | Algorithm::HS384 | Algorithm::HS512 => {
+                    ui.label("Secret");
+                    ui.text_edit_singleline(&mut ctx.app.jwt.secret);
+                }
+                Algorithm::RS256 | Algorithm::RS384 | Algorithm::RS512 => {
+                    ui.label("Private Key");
+                    ui.text_edit_multiline(&mut ctx.app.jwt.private_key);
+                }
             });
         });
     }
