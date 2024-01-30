@@ -1,4 +1,8 @@
+use std::collections::HashMap;
+
 use anyhow::{bail, Result};
+use serde::{Deserialize, Serialize};
+use serde_json::Map;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub enum Algorithm {
@@ -75,8 +79,8 @@ impl JwtEncoderDecoder {
 
         let token = jsonwebtoken::encode(
             &jsonwebtoken::Header::new(self.algorithm.clone().into()),
-            &self.decoded,
-            &jsonwebtoken::EncodingKey::from_secret(self.secret.as_bytes()),
+            &serde_json::from_str::<serde_json::Value>(&self.decoded)?,
+            &jsonwebtoken::EncodingKey::from_secret(self.secret.trim().as_bytes()),
         )?;
 
         Ok(token)
@@ -89,7 +93,7 @@ impl JwtEncoderDecoder {
 
         let token = jsonwebtoken::encode(
             &jsonwebtoken::Header::new(self.algorithm.clone().into()),
-            &self.decoded,
+            &serde_json::from_str::<serde_json::Value>(&self.decoded)?,
             &jsonwebtoken::EncodingKey::from_rsa_pem(self.private_key.as_bytes())?,
         )?;
 
@@ -101,13 +105,16 @@ impl JwtEncoderDecoder {
             bail!("Secret is required");
         }
 
-        let token_data = jsonwebtoken::decode::<String>(
+        let mut validation = jsonwebtoken::Validation::new(self.algorithm.clone().into());
+        validation.required_spec_claims.remove("exp");
+
+        let token_data = jsonwebtoken::decode::<Map<_, _>>(
             &self.encoded,
             &jsonwebtoken::DecodingKey::from_secret(self.secret.as_bytes()),
-            &jsonwebtoken::Validation::new(self.algorithm.clone().into()),
+            &validation,
         )?;
 
-        Ok(token_data.claims)
+        Ok(serde_json::to_string(&token_data.claims)?)
     }
 
     fn decode_by_rsa(&mut self) -> Result<String> {
@@ -115,12 +122,15 @@ impl JwtEncoderDecoder {
             bail!("Public key is required");
         }
 
-        let token_data = jsonwebtoken::decode::<String>(
+        let mut validation = jsonwebtoken::Validation::new(self.algorithm.clone().into());
+        validation.required_spec_claims.remove("exp");
+
+        let token_data = jsonwebtoken::decode::<Map<_, _>>(
             &self.encoded,
             &jsonwebtoken::DecodingKey::from_rsa_pem(self.public_key.as_bytes())?,
-            &jsonwebtoken::Validation::new(self.algorithm.clone().into()),
+            &validation,
         )?;
 
-        Ok(token_data.claims)
+        Ok(serde_json::to_string(&token_data.claims)?)
     }
 }

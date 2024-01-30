@@ -3,7 +3,10 @@ mod windows;
 use std::sync::RwLock;
 
 use eframe::{
-    egui::{self, Button, CursorIcon, Id, Label, Layout, Margin, Rgba, RichText, Ui, Visuals},
+    egui::{
+        self, Button, CursorIcon, Id, Label, Layout, Margin, Rgba, RichText, ScrollArea, TextEdit,
+        Ui, Visuals,
+    },
     epaint::{Color32, TextureManager},
     CreationContext, Theme,
 };
@@ -431,8 +434,23 @@ impl App {
                     ui.text_edit_singleline(&mut ctx.app.jwt.secret);
                 }
                 Algorithm::RS256 | Algorithm::RS384 | Algorithm::RS512 => {
+                    // ui.label("Public Key");
+                    ui.vertical(|ui| {
+                        ui.label("Public Key");
+                        let scroll_height = ui.available_height() - 30.0;
+                        ScrollArea::vertical()
+                            .auto_shrink([false, false])
+                            .max_height(scroll_height)
+                            .stick_to_bottom(false)
+                            .show(ui, |ui| {
+                                ui.text_edit_multiline(&mut ctx.app.jwt.public_key);
+                            });
+
+                        // Input
+                    });
+                    ui.add_space(HALF_SPACE);
                     ui.label("Private Key");
-                    ui.text_edit_multiline(&mut ctx.app.jwt.private_key);
+                    let res2 = ui.text_edit_multiline(&mut ctx.app.jwt.private_key);
                 }
             });
         });
