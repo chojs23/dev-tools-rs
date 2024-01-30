@@ -414,7 +414,6 @@ impl App {
                     match ctx.app.jwt.decode() {
                         Ok(_) => {}
                         Err(e) => {
-                            println!("{:?}", e);
                             append_global_error(e);
                         }
                     }
