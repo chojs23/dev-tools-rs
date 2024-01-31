@@ -434,23 +434,31 @@ impl App {
                     ui.text_edit_singleline(&mut ctx.app.jwt.secret);
                 }
                 Algorithm::RS256 | Algorithm::RS384 | Algorithm::RS512 => {
-                    // ui.label("Public Key");
                     ui.vertical(|ui| {
                         ui.label("Public Key");
                         let scroll_height = ui.available_height() - 30.0;
                         ScrollArea::vertical()
-                            .auto_shrink([false, false])
+                            .id_source("public_key")
                             .max_height(scroll_height)
                             .stick_to_bottom(false)
                             .show(ui, |ui| {
                                 ui.text_edit_multiline(&mut ctx.app.jwt.public_key);
                             });
-
-                        // Input
                     });
-                    ui.add_space(HALF_SPACE);
-                    ui.label("Private Key");
-                    let res2 = ui.text_edit_multiline(&mut ctx.app.jwt.private_key);
+
+                    ui.add_space(SPACE * 4.);
+
+                    ui.vertical(|ui| {
+                        ui.label("Private Key");
+                        let scroll_height = ui.available_height() - 30.0;
+                        ScrollArea::vertical()
+                            .id_source("private_key")
+                            .max_height(scroll_height)
+                            .stick_to_bottom(false)
+                            .show(ui, |ui| {
+                                ui.text_edit_multiline(&mut ctx.app.jwt.private_key);
+                            });
+                    });
                 }
             });
         });
