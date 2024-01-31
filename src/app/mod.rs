@@ -394,44 +394,107 @@ impl App {
                     ui.radio_value(&mut ctx.app.jwt.algorithm, Algorithm::RS512, "RS512");
                 });
 
+                ui.add_space(SPACE);
+
+                ui.horizontal(|ui| {
+                    if ui
+                        .button("⬆ Encode")
+                        .on_hover_cursor(CursorIcon::PointingHand)
+                        .clicked()
+                    {
+                        match ctx.app.jwt.encode() {
+                            Ok(_) => {}
+                            Err(e) => {
+                                append_global_error(e);
+                            }
+                        }
+                    }
+
+                    // if ui
+                    //     .button("✅ Verify")
+                    //     .on_hover_cursor(CursorIcon::PointingHand)
+                    //     .clicked()
+                    // {
+                    //     match ctx.app.jwt.verify() {
+                    //         Ok(_) => {}
+                    //         Err(e) => {
+                    //             append_global_error(e);
+                    //         }
+                    //     }
+                    // }
+
+                    if ui
+                        .button("⬇ Decode")
+                        .on_hover_cursor(CursorIcon::PointingHand)
+                        .clicked()
+                    {
+                        match ctx.app.jwt.decode() {
+                            Ok(_) => {}
+                            Err(e) => {
+                                append_global_error(e);
+                            }
+                        }
+                    }
+
+                    if ui
+                        .button("⟲  Clear")
+                        .on_hover_cursor(CursorIcon::PointingHand)
+                        .clicked()
+                    {
+                        ctx.app.jwt.clear();
+                    }
+
+                    // let _ = ctx.app.jwt.verify();
+
+                    ui.label(
+                        egui::RichText::new(format!(
+                            "Verified {}",
+                            if ctx.app.jwt.verified.is_some() {
+                                if ctx.app.jwt.verified.unwrap() {
+                                    "✔"
+                                } else {
+                                    "✖"
+                                }
+                            } else {
+                                ""
+                            }
+                        ))
+                        .color(ctx.app.jwt.verified.map_or(
+                            Color32::WHITE,
+                            |v| {
+                                if v {
+                                    Color32::GREEN
+                                } else {
+                                    Color32::RED
+                                }
+                            },
+                        )),
+                    )
+                });
+
                 ui.add_space(HALF_SPACE);
-
-                if ui
-                    .button("⬆ Encode")
-                    .on_hover_cursor(CursorIcon::PointingHand)
-                    .clicked()
-                {
-                    match ctx.app.jwt.encode() {
-                        Ok(_) => {}
-                        Err(e) => {
-                            append_global_error(e);
-                        }
-                    }
-                }
-
-                if ui
-                    .button("⬇ Decode")
-                    .on_hover_cursor(CursorIcon::PointingHand)
-                    .clicked()
-                {
-                    match ctx.app.jwt.decode() {
-                        Ok(_) => {}
-                        Err(e) => {
-                            append_global_error(e);
-                        }
-                    }
-                }
 
                 ui.vertical(|ui| {
                     ui.label("Decoded");
                     ui.text_edit_multiline(&mut ctx.app.jwt.decoded);
+                });
+
+                ui.add_space(SPACE);
+
+                ui.vertical(|ui| {
+                    ui.label("Header");
+                    ui.add_space(HALF_SPACE);
+                    let header = ctx.app.jwt.get_header().unwrap_or_default();
+                    ui.text_edit_multiline(&mut header.as_str());
                 });
             });
 
             ui.vertical(|ui| match ctx.app.jwt.algorithm {
                 Algorithm::HS256 | Algorithm::HS384 | Algorithm::HS512 => {
                     ui.label("Secret");
-                    ui.text_edit_singleline(&mut ctx.app.jwt.secret);
+                    if ui.text_edit_singleline(&mut ctx.app.jwt.secret).changed() {
+                        let _ = ctx.app.jwt.verify();
+                    }
                 }
                 Algorithm::RS256 | Algorithm::RS384 | Algorithm::RS512 => {
                     ui.vertical(|ui| {
@@ -442,7 +505,13 @@ impl App {
                             .max_height(scroll_height)
                             .stick_to_bottom(false)
                             .show(ui, |ui| {
-                                ui.text_edit_multiline(&mut ctx.app.jwt.public_key);
+                                if ui
+                                    .text_edit_multiline(&mut ctx.app.jwt.public_key)
+                                    .changed()
+                                {
+                                    println!("public key changed");
+                                    let _ = ctx.app.jwt.verify();
+                                }
                             });
                     });
 

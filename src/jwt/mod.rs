@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::{bail, Result};
+use jsonwebtoken::DecodingKey;
 use serde::{Deserialize, Serialize};
 use serde_json::Map;
 
@@ -43,6 +44,7 @@ pub struct JwtEncoderDecoder {
     pub secret: String,
     pub public_key: String,
     pub private_key: String,
+    pub verified: Option<bool>,
 }
 
 impl JwtEncoderDecoder {
@@ -50,6 +52,21 @@ impl JwtEncoderDecoder {
         Self {
             ..Default::default()
         }
+    }
+
+    pub fn clear(&mut self) {
+        self.encoded.clear();
+        self.decoded.clear();
+        self.algorithm = Algorithm::HS256;
+        self.secret.clear();
+        self.public_key.clear();
+        self.private_key.clear();
+        self.verified = None;
+    }
+
+    pub fn get_header(&mut self) -> Result<String> {
+        let header = jsonwebtoken::decode_header(&self.encoded)?;
+        Ok(serde_json::to_string(&header)?)
     }
 
     pub fn encode(&mut self) -> Result<()> {
@@ -63,13 +80,25 @@ impl JwtEncoderDecoder {
     }
 
     pub fn decode(&mut self) -> Result<()> {
-        let claims = match self.algorithm {
-            Algorithm::HS256 | Algorithm::HS384 | Algorithm::HS512 => self.decode_by_hmac()?,
-            Algorithm::RS256 | Algorithm::RS384 | Algorithm::RS512 => self.decode_by_rsa()?,
-        };
+        let mut validation = jsonwebtoken::Validation::new(self.algorithm.clone().into());
+        validation.insecure_disable_signature_validation();
+        validation.required_spec_claims.remove("exp");
 
-        self.decoded = claims;
+        let token_data = jsonwebtoken::decode::<Map<_, _>>(
+            &self.encoded,
+            &DecodingKey::from_secret(&[]),
+            &validation,
+        )?;
+
+        self.decoded = serde_json::to_string_pretty(&token_data.claims)?;
         Ok(())
+    }
+
+    pub fn verify(&mut self) -> Result<()> {
+        match self.algorithm {
+            Algorithm::HS256 | Algorithm::HS384 | Algorithm::HS512 => self.verify_by_hmac(),
+            Algorithm::RS256 | Algorithm::RS384 | Algorithm::RS512 => self.verify_by_rsa(),
+        }
     }
 
     fn encode_by_hmac(&mut self) -> Result<String> {
@@ -100,7 +129,7 @@ impl JwtEncoderDecoder {
         Ok(token)
     }
 
-    fn decode_by_hmac(&mut self) -> Result<String> {
+    fn verify_by_hmac(&mut self) -> Result<()> {
         if self.secret.is_empty() {
             bail!("Secret is required");
         }
@@ -108,16 +137,23 @@ impl JwtEncoderDecoder {
         let mut validation = jsonwebtoken::Validation::new(self.algorithm.clone().into());
         validation.required_spec_claims.remove("exp");
 
-        let token_data = jsonwebtoken::decode::<Map<_, _>>(
+        match jsonwebtoken::decode::<Map<_, _>>(
             &self.encoded,
             &jsonwebtoken::DecodingKey::from_secret(self.secret.as_bytes()),
             &validation,
-        )?;
-
-        Ok(serde_json::to_string(&token_data.claims)?)
+        ) {
+            Ok(_) => {
+                self.verified = Some(true);
+                Ok(())
+            }
+            Err(err) => {
+                self.verified = Some(false);
+                anyhow::bail!(err)
+            }
+        }
     }
 
-    fn decode_by_rsa(&mut self) -> Result<String> {
+    fn verify_by_rsa(&mut self) -> Result<()> {
         if self.public_key.is_empty() {
             bail!("Public key is required");
         }
@@ -125,12 +161,21 @@ impl JwtEncoderDecoder {
         let mut validation = jsonwebtoken::Validation::new(self.algorithm.clone().into());
         validation.required_spec_claims.remove("exp");
 
-        let token_data = jsonwebtoken::decode::<Map<_, _>>(
+        match jsonwebtoken::decode::<Map<_, _>>(
             &self.encoded,
             &jsonwebtoken::DecodingKey::from_rsa_pem(self.public_key.as_bytes())?,
             &validation,
-        )?;
-
-        Ok(serde_json::to_string(&token_data.claims)?)
+        ) {
+            Ok(_) => {
+                self.verified = Some(true);
+                println!("verified");
+                Ok(())
+            }
+            Err(err) => {
+                self.verified = Some(false);
+                println!("not verified");
+                anyhow::bail!(err)
+            }
+        }
     }
 }
