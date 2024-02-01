@@ -379,7 +379,9 @@ impl App {
             ui.vertical(|ui| {
                 ui.vertical(|ui| {
                     ui.label("Encoded");
-                    ui.text_edit_multiline(&mut ctx.app.jwt.encoded);
+                    if ui.text_edit_multiline(&mut ctx.app.jwt.encoded).changed() {
+                        let _ = ctx.app.jwt.verify();
+                    }
                 });
 
                 ui.add_space(HALF_SPACE);
@@ -410,19 +412,6 @@ impl App {
                         }
                     }
 
-                    // if ui
-                    //     .button("✅ Verify")
-                    //     .on_hover_cursor(CursorIcon::PointingHand)
-                    //     .clicked()
-                    // {
-                    //     match ctx.app.jwt.verify() {
-                    //         Ok(_) => {}
-                    //         Err(e) => {
-                    //             append_global_error(e);
-                    //         }
-                    //     }
-                    // }
-
                     if ui
                         .button("⬇ Decode")
                         .on_hover_cursor(CursorIcon::PointingHand)
@@ -443,8 +432,6 @@ impl App {
                     {
                         ctx.app.jwt.clear();
                     }
-
-                    // let _ = ctx.app.jwt.verify();
 
                     ui.label(
                         egui::RichText::new(format!(
@@ -509,7 +496,6 @@ impl App {
                                     .text_edit_multiline(&mut ctx.app.jwt.public_key)
                                     .changed()
                                 {
-                                    println!("public key changed");
                                     let _ = ctx.app.jwt.verify();
                                 }
                             });

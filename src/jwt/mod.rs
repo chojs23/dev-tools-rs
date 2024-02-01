@@ -161,19 +161,22 @@ impl JwtEncoderDecoder {
         let mut validation = jsonwebtoken::Validation::new(self.algorithm.clone().into());
         validation.required_spec_claims.remove("exp");
 
-        match jsonwebtoken::decode::<Map<_, _>>(
-            &self.encoded,
-            &jsonwebtoken::DecodingKey::from_rsa_pem(self.public_key.as_bytes())?,
-            &validation,
-        ) {
+        let decoding_key = match jsonwebtoken::DecodingKey::from_rsa_pem(self.public_key.as_bytes())
+        {
+            Ok(key) => key,
+            Err(err) => {
+                self.verified = Some(false);
+                bail!(err)
+            }
+        };
+
+        match jsonwebtoken::decode::<Map<_, _>>(&self.encoded, &decoding_key, &validation) {
             Ok(_) => {
                 self.verified = Some(true);
-                println!("verified");
                 Ok(())
             }
             Err(err) => {
                 self.verified = Some(false);
-                println!("not verified");
                 anyhow::bail!(err)
             }
         }
