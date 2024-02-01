@@ -10,6 +10,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use crate::{
+    color::{ChromaticAdaptationMethod, ColorFormat, ColorHarmony, Illuminant, RgbWorkingSpace},
+    ui::layout::HarmonyLayout,
+};
+
 pub const DEFAULT_PIXELS_PER_POINT: f32 = 1.0;
 
 pub fn load_global(_storage: Option<&dyn eframe::Storage>) -> Option<Settings> {
@@ -59,13 +64,13 @@ fn is_true(it: &bool) -> bool {
     *it
 }
 
-// fn is_default_harmony_layout(it: &HarmonyLayout) -> bool {
-//     *it == HarmonyLayout::default()
-// }
-//
-// fn is_default_harmony(it: &ColorHarmony) -> bool {
-//     *it == ColorHarmony::default()
-// }
+fn is_default_harmony_layout(it: &HarmonyLayout) -> bool {
+    *it == HarmonyLayout::default()
+}
+
+fn is_default_harmony(it: &ColorHarmony) -> bool {
+    *it == ColorHarmony::default()
+}
 
 fn is_default_color_size(it: &f32) -> bool {
     *it == DEFAULT_COLOR_SIZE
@@ -131,6 +136,14 @@ pub struct Settings {
     #[serde(default)]
     #[serde(skip_serializing_if = "HashMap::is_empty")]
     pub saved_color_formats: HashMap<String, String>,
+    #[serde(default)]
+    pub color_spaces: ColorSpaceSettings,
+    #[serde(default)]
+    pub rgb_working_space: RgbWorkingSpace,
+    #[serde(default)]
+    pub chromatic_adaptation_method: ChromaticAdaptationMethod,
+    #[serde(default)]
+    pub illuminant: Illuminant,
     // #[serde(default)]
     // #[serde(skip_serializing_if = "HashMap::is_empty")]
     // pub saved_palette_formats: HashMap<String, CustomPaletteFormat>,
@@ -158,7 +171,7 @@ fn is_default_pixels_per_point(ppp: &f32) -> bool {
 
 impl Default for Settings {
     fn default() -> Self {
-        // let ws = RgbWorkingSpace::default();
+        let ws = RgbWorkingSpace::default();
         Self {
             is_dark_mode: true,
             color_display_format: ColorDisplayFmtEnum::default(),
@@ -166,10 +179,10 @@ impl Default for Settings {
             // palette_clipboard_format: PaletteFormat::default(),
             saved_color_formats: HashMap::default(),
             // saved_palette_formats: HashMap::default(),
-            // color_spaces: ColorSpaceSettings::default(),
-            // rgb_working_space: ws,
-            // chromatic_adaptation_method: ChromaticAdaptationMethod::default(),
-            // illuminant: ws.reference_illuminant(),
+            color_spaces: ColorSpaceSettings::default(),
+            rgb_working_space: ws,
+            chromatic_adaptation_method: ChromaticAdaptationMethod::default(),
+            illuminant: ws.reference_illuminant(),
             cache_colors: true,
             // harmony: ColorHarmony::default(),
             // harmony_layout: HarmonyLayout::default(),
@@ -256,11 +269,11 @@ impl AsRef<str> for ColorDisplayFmtEnum {
     }
 }
 
-// impl ColorDisplayFmtEnum {
-//     pub fn default_display_format() -> ColorFormat<'static> {
-//         ColorFormat::Hex
-//     }
-// }
+impl ColorDisplayFmtEnum {
+    pub fn default_display_format() -> ColorFormat<'static> {
+        ColorFormat::Hex
+    }
+}
 
 // #[cfg(test)]
 // mod tests {

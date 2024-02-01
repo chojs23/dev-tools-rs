@@ -1,3 +1,8 @@
+pub mod colorbox;
+pub mod layout;
+pub mod slider_1d;
+pub mod slider_2d;
+
 use eframe::{
     egui::{
         style::{Selection, Widgets},
@@ -73,6 +78,8 @@ pub mod colors {
 
 use colors::*;
 
+use crate::color::{Color, ColorFormat, Illuminant, RgbWorkingSpace};
+
 pub fn light_visuals() -> Visuals {
     let mut widgets = Widgets::light();
     widgets.noninteractive.bg_fill = *L_BG_4_TRANSPARENT;
@@ -118,4 +125,18 @@ pub fn dark_visuals() -> Visuals {
         widgets,
         ..Default::default()
     }
+}
+
+pub fn color_tooltip(
+    color: &Color,
+    display_format: ColorFormat,
+    ws: RgbWorkingSpace,
+    illuminant: Illuminant,
+    text: Option<&str>,
+) -> String {
+    format!(
+        "{}\n\n{}",
+        color.display(display_format, ws, illuminant),
+        text.unwrap_or_default()
+    )
 }

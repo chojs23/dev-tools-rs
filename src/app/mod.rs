@@ -4,8 +4,8 @@ use std::sync::RwLock;
 
 use eframe::{
     egui::{
-        self, Button, CursorIcon, Id, Label, Layout, Margin, Rgba, RichText, ScrollArea, TextEdit,
-        Ui, Visuals,
+        self, Button, CursorIcon, Id, Label, Layout, Margin, Rgba, RichText, ScrollArea, Ui,
+        Visuals,
     },
     epaint::{Color32, TextureManager},
     CreationContext, Theme,
@@ -14,14 +14,19 @@ use once_cell::sync::{Lazy, OnceCell};
 
 use windows::SettingsWindow;
 
+static ADD_DESCRIPTION: &str = "Add this color to saved colors";
+
 use crate::{
     app::colors::*,
     context::{AppCtx, FrameCtx},
     error::{append_global_error, DisplayError, ERROR_STACK},
     jwt::Algorithm,
+    save_to_clipboard,
     screen_size::ScreenSize,
     ui::*,
 };
+
+use self::colorbox::ColorBox;
 
 pub static LIGHT_VISUALS: Lazy<Visuals> = Lazy::new(light_visuals);
 pub static DARK_VISUALS: Lazy<Visuals> = Lazy::new(dark_visuals);
@@ -520,6 +525,70 @@ impl App {
     }
 
     fn color_picker_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut egui::Ui) {
-        ui.label("ColorPicker");
+        let mut top_padding = 0.;
+        let mut err_idx = 0;
+        self.error_ui(ctx, ui);
+
+        ui.horizontal(|ui| {
+            ui.add_space(HALF_SPACE);
+            // if ctx.app.settings.harmony_display_box {
+            //     self.display_harmonies(ctx, ui);
+            // }
+            ui.vertical(|ui| {
+                ui.horizontal(|ui| {
+                    ui.label("Current color: ");
+                    if ui
+                        .button(icon::COPY)
+                        .on_hover_text("Copy color to clipboard")
+                        .on_hover_cursor(CursorIcon::Alias)
+                        .clicked()
+                    {
+                        if let Err(e) = save_to_clipboard(
+                            ctx.app.clipboard_color(&ctx.app.picker.current_color),
+                        ) {
+                            append_global_error(format!(
+                                "Failed to save color to clipboard - {}",
+                                e
+                            ));
+                        }
+                    }
+                    if ui
+                        .button(icon::ADD)
+                        .on_hover_text(ADD_DESCRIPTION)
+                        .on_hover_cursor(CursorIcon::Copy)
+                        .clicked()
+                    {
+                        ctx.app.add_cur_color();
+                    }
+                });
+                // let cb = ColorBox::builder()
+                //     .size((CURRENT_COLOR_BOX_SIZE, CURRENT_COLOR_BOX_SIZE))
+                //     .color(ctx.app.picker.current_color)
+                //     .label(true)
+                //     .hover_help(COLORBOX_PICK_TOOLTIP)
+                //     .border(true)
+                //     .build();
+                // ui.horizontal(|ui| {
+                //     cb.display(ctx, ui);
+                // });
+                //
+                // self.zoom_picker.display(ctx, ui);
+            });
+        });
+
+        ui.add_space(SPACE);
+
+        ScrollArea::vertical()
+            .id_source("picker scroll")
+            .show(ui, |ui| {
+                // self.harmonies_header(ctx, ui);
+                // self.sliders(ctx, ui);
+                // self.hex_input(ctx, ui);
+                let mut available_space = ui.available_size_before_wrap();
+                if ctx.app.sidepanel.show {
+                    available_space.x -= ctx.app.sidepanel.response_size.x;
+                }
+                ui.allocate_space(available_space);
+            });
     }
 }

@@ -1,20 +1,38 @@
-use eframe::{egui, epaint::TextureManager, CreationContext};
+use eframe::{
+    egui::{self, CursorIcon},
+    epaint::TextureManager,
+    CreationContext,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     app::{CentralPanelTab, DARK_VISUALS, LIGHT_VISUALS},
+    color::{Color, ColorFormat, Palettes},
+    color_picker::ColorPicker,
+    error::append_global_error,
     jwt::JwtEncoderDecoder,
     screen_size::ScreenSize,
-    settings::{self, Settings},
+    settings::{self, ColorDisplayFmtEnum, Settings},
 };
 
 #[derive(Clone, Debug)]
 pub struct AppCtx {
     pub settings: Settings,
+
     pub screen_size: ScreenSize,
+    pub cursor_icon: CursorIcon,
+
     pub sidepanel: SidePanelData,
+
     pub jwt: JwtEncoderDecoder,
+    pub picker: ColorPicker,
+    pub palettes: Palettes,
+
+    pub cursor_pick_color: Color,
+    pub current_selected_color: Color,
+
     pub central_panel_tab: CentralPanelTab,
+
     pub zoom_window_dragged: bool,
 }
 
@@ -37,6 +55,7 @@ impl Default for AppCtx {
     fn default() -> Self {
         Self {
             settings: Settings::default(),
+            cursor_icon: CursorIcon::default(),
             screen_size: ScreenSize::Desktop(0., 0.),
             sidepanel: SidePanelData {
                 show: false,
@@ -46,6 +65,10 @@ impl Default for AppCtx {
                 response_size: (0., 0.).into(),
             },
             jwt: JwtEncoderDecoder::default(),
+            picker: ColorPicker::default(),
+            palettes: Palettes::default(),
+            cursor_pick_color: Color::black(),
+            current_selected_color: Color::black(),
             central_panel_tab: CentralPanelTab::Jwt,
             zoom_window_dragged: false,
         }
@@ -59,17 +82,89 @@ impl AppCtx {
     pub fn new(context: &CreationContext) -> Self {
         Self {
             settings: settings::load_global(context.storage).unwrap_or_default(),
-            screen_size: ScreenSize::Desktop(0., 0.),
-            sidepanel: SidePanelData {
-                show: false,
-                edit_palette_name: false,
-                trigger_edit_focus: false,
-                box_width: 0.,
-                response_size: (0., 0.).into(),
+            ..Default::default()
+        }
+    }
+
+    /// Current color display format
+    pub fn display_format(&self) -> ColorFormat {
+        match self.settings.color_display_format {
+            ColorDisplayFmtEnum::Hex => ColorFormat::Hex,
+            ColorDisplayFmtEnum::HexUppercase => ColorFormat::HexUpercase,
+            ColorDisplayFmtEnum::CssRgb => ColorFormat::CssRgb,
+            ColorDisplayFmtEnum::CssHsl => ColorFormat::CssHsl {
+                degree_symbol: true,
             },
-            jwt: JwtEncoderDecoder::default(),
-            central_panel_tab: CentralPanelTab::Jwt,
-            zoom_window_dragged: false,
+            ColorDisplayFmtEnum::Custom(ref name) => {
+                if self.settings.saved_color_formats.get(name).is_some() {
+                    ColorFormat::Custom(&self.settings.saved_color_formats[name])
+                } else {
+                    append_global_error(format!("Custom color format `{name}` not found"));
+                    ColorDisplayFmtEnum::default_display_format()
+                }
+            }
+        }
+    }
+
+    /// Format a color as a string using display color format from settings
+    pub fn display_color(&self, color: &Color) -> String {
+        color.display(
+            self.display_format(),
+            self.settings.rgb_working_space,
+            self.settings.illuminant,
+        )
+    }
+
+    /// Format a color as a string using clipboard color format from settings
+    pub fn clipboard_color(&self, color: &Color) -> String {
+        let format = match self
+            .settings
+            .color_clipboard_format
+            .as_ref()
+            .unwrap_or(&self.settings.color_display_format)
+        {
+            ColorDisplayFmtEnum::Hex => ColorFormat::Hex,
+            ColorDisplayFmtEnum::HexUppercase => ColorFormat::HexUpercase,
+            ColorDisplayFmtEnum::CssRgb => ColorFormat::CssRgb,
+            ColorDisplayFmtEnum::CssHsl => ColorFormat::CssHsl {
+                degree_symbol: false,
+            },
+            ColorDisplayFmtEnum::Custom(name) => {
+                if self.settings.saved_color_formats.get(name).is_some() {
+                    ColorFormat::Custom(&self.settings.saved_color_formats[name])
+                } else {
+                    append_global_error(format!("Custom color format `{name}` not found"));
+                    ColorDisplayFmtEnum::default_display_format()
+                }
+            }
+        };
+        color.display(
+            format,
+            self.settings.rgb_working_space,
+            self.settings.illuminant,
+        )
+    }
+
+    /// Adds a color to the currently selected palette
+    pub fn add_color(&mut self, color: Color) {
+        if !self.palettes.current_mut().palette.add(color) {
+            let color_str = self.display_color(&color);
+            append_global_error(format!("Color {} already saved!", color_str));
+        } else {
+            self.sidepanel.show = true;
+        }
+    }
+
+    pub fn add_cur_color(&mut self) {
+        self.add_color(self.picker.current_color)
+    }
+
+    /// Replaces cursor icon with `icon`
+    pub fn toggle_mouse(&mut self, icon: CursorIcon) {
+        self.cursor_icon = if icon == self.cursor_icon {
+            CursorIcon::default()
+        } else {
+            icon
         }
     }
 

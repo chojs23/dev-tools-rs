@@ -1,12 +1,26 @@
 mod app;
+mod color;
+mod color_picker;
 mod context;
 mod error;
 mod jwt;
+mod math;
+mod render;
 mod screen_size;
 mod settings;
 mod ui;
 
+use anyhow::{Context, Result};
+
 pub use app::App as DevToolsApp;
+
+#[cfg(not(target_arch = "wasm32"))]
+fn save_to_clipboard(text: String) -> Result<()> {
+    let mut clipboard = arboard::Clipboard::new()?;
+    clipboard
+        .set_text(text)
+        .context("failed to save to clipboard")
+}
 
 #[cfg(not(target_arch = "wasm32"))]
 fn get_timestamp() -> u64 {
