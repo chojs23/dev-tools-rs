@@ -77,7 +77,7 @@ dependencies = [
  "once_cell",
  "paste",
  "static_assertions",
- "windows",
+ "windows 0.48.0",
 ]
 
 [[package]]
@@ -865,17 +865,22 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "arboard",
+ "core-graphics 0.23.1",
  "dirs",
  "eframe",
  "env_logger",
+ "js-sys",
  "jsonwebtoken",
  "native-dialog",
  "nom",
+ "objc",
  "once_cell",
  "serde",
  "serde_json",
  "serde_yaml",
  "tempfile",
+ "windows 0.52.0",
+ "x11rb 0.13.0",
 ]
 
 [[package]]
@@ -1932,6 +1937,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "915b1b472bc21c53464d6c8461c9d3af805ba1ef837e1cac254428f4a77177b1"
 dependencies = [
  "malloc_buf",
+ "objc_exception",
 ]
 
 [[package]]
@@ -1992,6 +1998,15 @@ name = "objc2-encode"
 version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d079845b37af429bfe5dfa76e6d087d788031045b25cfc6fd898486fd9847666"
+
+[[package]]
+name = "objc_exception"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ad970fb455818ad6cba4c122ad012fae53ae8b4795f86378bce65e4f6bab2ca4"
+dependencies = [
+ "cc",
+]
 
 [[package]]
 name = "objc_id"
@@ -3212,6 +3227,25 @@ dependencies = [
  "windows-implement",
  "windows-interface",
  "windows-targets 0.48.5",
+]
+
+[[package]]
+name = "windows"
+version = "0.52.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e48a53791691ab099e5e2ad123536d0fff50652600abaf43bbf952894110d0be"
+dependencies = [
+ "windows-core",
+ "windows-targets 0.52.0",
+]
+
+[[package]]
+name = "windows-core"
+version = "0.52.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33ab640c8d7e35bf8ba19b884ba838ceb4fba93a4e8c65a9059d08afcfc683d9"
+dependencies = [
+ "windows-targets 0.52.0",
 ]
 
 [[package]]

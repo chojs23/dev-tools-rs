@@ -1,6 +1,6 @@
 use eframe::{
     egui::{self, CursorIcon},
-    CreationContext,
+    CreationContext, Storage,
 };
 use serde::{Deserialize, Serialize};
 
@@ -143,6 +143,46 @@ impl AppCtx {
             self.settings.rgb_working_space,
             self.settings.illuminant,
         )
+    }
+
+    /// Load palettes from appropriate location based on the target arch
+    pub fn load_palettes(&mut self, _storage: Option<&dyn Storage>) {
+        if self.settings.cache_colors {
+            #[cfg(target_arch = "wasm32")]
+            if let Some(storage) = _storage {
+                match Palettes::load_from_storage(storage) {
+                    Ok(palettes) => self.palettes = palettes,
+                    Err(e) => append_global_error(format!("failed to load palettes, {e:?}")),
+                }
+            }
+
+            #[cfg(not(target_arch = "wasm32"))]
+            if let Some(path) = Palettes::dir("dev_tools") {
+                match Palettes::load(path.join(Palettes::FILE_NAME)) {
+                    Ok(palettes) => self.palettes = palettes,
+                    Err(e) => append_global_error(format!("failed to load palettes, {e:?}")),
+                }
+            }
+        }
+    }
+
+    /// Save palettes to appropriate location based on the target arch
+    pub fn save_palettes(&self, _storage: &mut dyn Storage) {
+        #[cfg(target_arch = "wasm32")]
+        if self.settings.cache_colors {
+            if let Err(e) = self.palettes.save_to_storage(_storage) {
+                append_global_error(format!("failed to save palettes, {e:?}"));
+            }
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(dir) = Palettes::dir("dev_tools") {
+            if !dir.exists() {
+                let _ = std::fs::create_dir_all(&dir);
+            }
+            if let Err(e) = self.palettes.save(dir.join(Palettes::FILE_NAME)) {
+                append_global_error(format!("failed to save palettes, {e:?}"));
+            }
+        }
     }
 
     /// Adds a color to the currently selected palette

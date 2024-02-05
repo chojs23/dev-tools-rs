@@ -2,6 +2,7 @@ mod app;
 mod color;
 mod color_picker;
 mod context;
+mod display_picker;
 mod error;
 mod jwt;
 mod math;
@@ -9,6 +10,7 @@ mod render;
 mod screen_size;
 mod settings;
 mod ui;
+mod zoom_picker;
 
 use anyhow::{Context, Result};
 

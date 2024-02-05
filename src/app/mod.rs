@@ -25,6 +25,7 @@ use crate::{
     save_to_clipboard,
     screen_size::ScreenSize,
     ui::*,
+    zoom_picker::ZoomPicker,
 };
 
 use self::colorbox::ColorBox;
@@ -55,6 +56,7 @@ pub struct Windows {
 pub struct App {
     pub windows: Windows,
     pub display_errors: Vec<DisplayError>,
+    pub zoom_picker: ZoomPicker,
 }
 
 impl eframe::App for App {
@@ -115,7 +117,7 @@ impl eframe::App for App {
                 std::thread::sleep(std::time::Duration::from_millis(100));
             }
 
-            // ctx.app.current_selected_color = ctx.app.picker.current_color;
+            ctx.app.current_selected_color = ctx.app.picker.current_color;
         }
     }
 }
@@ -127,6 +129,7 @@ impl App {
         let app = Box::new(Self {
             windows: Windows::default(),
             display_errors: Default::default(),
+            zoom_picker: ZoomPicker::default(),
         });
 
         let prefer_dark = context
@@ -143,7 +146,7 @@ impl App {
                 frame: None,
             };
 
-            // ctx.app.load_palettes(context.storage);
+            ctx.app.load_palettes(context.storage);
 
             if prefer_dark {
                 ctx.set_dark_theme();
@@ -575,7 +578,7 @@ impl App {
                     cb.display(ctx, ui);
                 });
 
-                // self.zoom_picker.display(ctx, ui);
+                self.zoom_picker.display(ctx, ui);
             });
         });
 
