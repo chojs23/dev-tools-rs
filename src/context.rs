@@ -1,6 +1,5 @@
 use eframe::{
     egui::{self, CursorIcon},
-    epaint::TextureManager,
     CreationContext,
 };
 use serde::{Deserialize, Serialize};
@@ -11,6 +10,7 @@ use crate::{
     color_picker::ColorPicker,
     error::append_global_error,
     jwt::JwtEncoderDecoder,
+    render::{TextureAllocator, TextureManager},
     screen_size::ScreenSize,
     settings::{self, ColorDisplayFmtEnum, Settings},
 };
@@ -192,9 +192,9 @@ pub struct FrameCtx<'frame> {
 }
 
 impl<'frame> FrameCtx<'frame> {
-    // pub fn tex_allocator(&self) -> TextureAllocator {
-    //     Some(self.egui.tex_manager())
-    // }
+    pub fn tex_allocator(&self) -> TextureAllocator {
+        Some(self.egui.tex_manager())
+    }
 
     pub fn is_dark_mode(&self) -> bool {
         self.app.settings.is_dark_mode

@@ -7,7 +7,7 @@ use eframe::{
         self, Button, CursorIcon, Id, Label, Layout, Margin, Rgba, RichText, ScrollArea, Ui,
         Visuals,
     },
-    epaint::{Color32, TextureManager},
+    epaint::Color32,
     CreationContext, Theme,
 };
 use once_cell::sync::{Lazy, OnceCell};
@@ -21,6 +21,7 @@ use crate::{
     context::{AppCtx, FrameCtx},
     error::{append_global_error, DisplayError, ERROR_STACK},
     jwt::Algorithm,
+    render::TextureManager,
     save_to_clipboard,
     screen_size::ScreenSize,
     ui::*,
@@ -35,6 +36,8 @@ pub static TEXTURE_MANAGER: Lazy<RwLock<TextureManager>> =
 pub static CONTEXT: OnceCell<RwLock<AppCtx>> = OnceCell::new();
 
 static ERROR_DISPLAY_DURATION: u64 = 10;
+
+pub const CURRENT_COLOR_BOX_SIZE: f32 = 40.0;
 pub const DEFAULT_PIXELS_PER_POINT: f32 = 1.0;
 
 #[derive(Clone, Debug)]
@@ -561,17 +564,17 @@ impl App {
                         ctx.app.add_cur_color();
                     }
                 });
-                // let cb = ColorBox::builder()
-                //     .size((CURRENT_COLOR_BOX_SIZE, CURRENT_COLOR_BOX_SIZE))
-                //     .color(ctx.app.picker.current_color)
-                //     .label(true)
-                //     .hover_help(COLORBOX_PICK_TOOLTIP)
-                //     .border(true)
-                //     .build();
-                // ui.horizontal(|ui| {
-                //     cb.display(ctx, ui);
-                // });
-                //
+                let cb = ColorBox::builder()
+                    .size((CURRENT_COLOR_BOX_SIZE, CURRENT_COLOR_BOX_SIZE))
+                    .color(ctx.app.picker.current_color)
+                    .label(true)
+                    // .hover_help(COLORBOX_PICK_TOOLTIP)
+                    .border(true)
+                    .build();
+                ui.horizontal(|ui| {
+                    cb.display(ctx, ui);
+                });
+
                 // self.zoom_picker.display(ctx, ui);
             });
         });

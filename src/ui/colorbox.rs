@@ -1,4 +1,6 @@
-use crate::{color::Color, context::FrameCtx, save_to_clipboard, ui::color_tooltip};
+use crate::{
+    color::Color, context::FrameCtx, render::render_color, save_to_clipboard, ui::color_tooltip,
+};
 
 use eframe::egui::Ui;
 
@@ -51,33 +53,33 @@ impl ColorBox {
             ctx.app.settings.illuminant,
             self.hover_help(),
         );
-        // let tex_allocator = &mut ctx.tex_allocator();
-        // let resp = render_color(
-        //     ui,
-        //     tex_allocator,
-        //     ctx.tex_manager,
-        //     self.color().color32(),
-        //     self.size(),
-        //     Some(&on_hover),
-        //     self.border(),
-        // );
-        // if let Some(resp) = resp {
-        //     if self.label() {
-        //         ui.monospace(&display_str);
-        //     }
-        //
-        //     if resp.clicked() {
-        //         ctx.app.picker.set_cur_color(color);
-        //     }
-        //
-        //     if resp.middle_clicked() {
-        //         ctx.app.add_color(color);
-        //     }
-        //
-        //     if resp.secondary_clicked() {
-        //         let _ = save_to_clipboard(ctx.app.clipboard_color(&color));
-        //     }
-        // }
+        let tex_allocator = &mut ctx.tex_allocator();
+        let resp = render_color(
+            ui,
+            tex_allocator,
+            ctx.tex_manager,
+            self.color().color32(),
+            self.size(),
+            Some(&on_hover),
+            self.border(),
+        );
+        if let Some(resp) = resp {
+            if self.label() {
+                ui.monospace(&display_str);
+            }
+
+            if resp.clicked() {
+                ctx.app.picker.set_cur_color(color);
+            }
+
+            if resp.middle_clicked() {
+                ctx.app.add_color(color);
+            }
+
+            if resp.secondary_clicked() {
+                let _ = save_to_clipboard(ctx.app.clipboard_color(&color));
+            }
+        }
     }
 }
 
