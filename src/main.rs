@@ -1,3 +1,4 @@
+#![allow(warnings)]
 fn main() -> Result<(), eframe::Error> {
     env_logger::init();
 

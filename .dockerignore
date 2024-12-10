@@ -1,0 +1,9 @@
+.git
+.github
+**/.gitignore
+**/.gitkeep
+.gitattributes
+**/target
+.DS_Store
+compose.yml
+blob

@@ -237,7 +237,7 @@ impl ZoomPicker {
         ui: &mut Ui,
         picker: Rc<dyn DisplayPickerExt>,
     ) {
-        let btn = Button::new(icon::ZOOM_PICKER).sense(egui::Sense::drag());
+        let btn = Button::new(icon::ZOOM_PICKER).sense(eframe::egui::Sense::drag());
         let btn = ui
             .add(btn)
             .on_hover_cursor(CursorIcon::ZoomIn)
