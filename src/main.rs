@@ -7,6 +7,6 @@ fn main() -> Result<(), eframe::Error> {
     eframe::run_native(
         "Dev tools",
         options,
-        Box::new(|ctx| dev_tools::DevToolsApp::init(ctx)),
+        Box::new(|ctx| Ok(dev_tools::DevToolsApp::init(ctx))),
     )
 }

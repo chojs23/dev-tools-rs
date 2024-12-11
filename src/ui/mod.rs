@@ -101,7 +101,7 @@ pub fn light_visuals() -> Visuals {
             bg_fill: *L_BG_5,
             stroke: Stroke::new(0.7, *D_BG_0),
         },
-        popup_shadow: Shadow::small_light(),
+        popup_shadow: Shadow::default(),
         widgets,
         ..Default::default()
     }
@@ -121,7 +121,7 @@ pub fn dark_visuals() -> Visuals {
             bg_fill: *D_BG_3_TRANSPARENT,
             stroke: Stroke::new(0.7, *D_FG_0),
         },
-        popup_shadow: Shadow::small_dark(),
+        popup_shadow: Shadow::default(),
         widgets,
         ..Default::default()
     }

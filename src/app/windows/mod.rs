@@ -22,9 +22,9 @@ pub fn default_frame(is_dark_mode: bool) -> Frame {
         inner_margin: Margin::symmetric(15., 15.),
         rounding: Rounding::same(5.),
         shadow: if is_dark_mode {
-            Shadow::big_dark()
+            Shadow::default()
         } else {
-            Shadow::big_light()
+            Shadow::default()
         },
         stroke: if is_dark_mode {
             Stroke::new(2., *D_BG_00)
