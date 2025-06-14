@@ -157,7 +157,7 @@ impl AppCtx {
             }
 
             #[cfg(not(target_arch = "wasm32"))]
-            if let Some(path) = Palettes::dir("dev_tools") {
+            if let Some(path) = Palettes::dir("d_tools") {
                 match Palettes::load(path.join(Palettes::FILE_NAME)) {
                     Ok(palettes) => self.palettes = palettes,
                     Err(e) => append_global_error(format!("failed to load palettes, {e:?}")),
@@ -175,7 +175,7 @@ impl AppCtx {
             }
         }
         #[cfg(not(target_arch = "wasm32"))]
-        if let Some(dir) = Palettes::dir("dev_tools") {
+        if let Some(dir) = Palettes::dir("d_tools") {
             if !dir.exists() {
                 let _ = std::fs::create_dir_all(&dir);
             }
