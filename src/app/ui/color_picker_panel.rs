@@ -6,7 +6,7 @@ use crate::{
     ui::{icon, HALF_SPACE, SPACE},
     zoom_picker::ZoomPicker,
 };
-use eframe::egui::{CursorIcon, ScrollArea, Ui};
+use eframe::egui::{show_tooltip_text, Color32, CursorIcon, Id, ScrollArea, Sense, Stroke, Ui};
 
 pub struct ColorPickerPanel {
     pub zoom_picker: ZoomPicker,
@@ -27,6 +27,9 @@ impl UiPanel for ColorPickerPanel {
         ScrollArea::vertical()
             .id_source("picker scroll")
             .show(ui, |ui| {
+                // Display color picking history
+                self.render_color_picking_history(ctx, ui);
+
                 let mut available_space = ui.available_size_before_wrap();
                 if ctx.app.sidepanel.show {
                     available_space.x -= ctx.app.sidepanel.response_size.x;
@@ -93,5 +96,77 @@ impl ColorPickerPanel {
         ui.horizontal(|ui| {
             cb.display(ctx, ui);
         });
+    }
+
+    fn render_color_picking_history(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
+        // Check if we need to clear history first
+        let mut clear_history = false;
+
+        let history_len = ctx.app.color_picking_history.len();
+        if history_len > 0 {
+            ui.separator();
+            ui.label("Color Picking History:");
+            ui.add_space(HALF_SPACE);
+
+            // Create a list of colors with their display strings
+            let mut history_items = Vec::new();
+            for (index, &color) in ctx.app.color_picking_history.iter().enumerate().rev() {
+                let color_display = ctx.app.display_color(&color);
+                history_items.push((color, color_display, index));
+            }
+
+            // Display colors in a grid layout
+            ui.horizontal_wrapped(|ui| {
+                for (color, color_display, index) in &history_items {
+                    let history_box = ColorBox::builder()
+                        .size((30.0, 30.0))
+                        .color(*color)
+                        .label(false)
+                        .border(true)
+                        .hover_help(format!("#{}: {}", index + 1, color_display))
+                        .build();
+
+                    ui.horizontal(|ui| {
+                        // Create a simple color box without using the display method to avoid borrowing issues
+                        let color_rect = ui.allocate_response([30.0, 30.0].into(), Sense::click());
+                        let painter = ui.painter();
+                        painter.rect_filled(color_rect.rect, 2.0, color.color32());
+                        painter.rect_stroke(color_rect.rect, 2.0, Stroke::new(1.0, Color32::BLACK));
+
+                        if color_rect.clicked() {
+                            ctx.app.picker.current_color = *color;
+                        }
+
+                        if color_rect.hovered() {
+                            show_tooltip_text(
+                                ui.ctx(),
+                                Id::new(format!("history_{}", index + 1)),
+                                format!("#{}: {}", index + 1, color_display),
+                            );
+                        }
+                    });
+
+                    // Break line after every 10 colors for better layout
+                    if (index + 1) % 10 == 0 {
+                        ui.end_row();
+                    }
+                }
+            });
+
+            ui.add_space(SPACE);
+
+            // Add clear history button
+            ui.horizontal(|ui| {
+                if ui.button("Clear History").clicked() {
+                    clear_history = true;
+                }
+                ui.label(format!("({} colors)", history_len));
+            });
+        }
+
+        // Clear history outside of the borrow scope
+        if clear_history {
+            ctx.app.color_picking_history.clear();
+        }
     }
 }

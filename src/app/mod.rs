@@ -238,7 +238,21 @@ impl App {
     fn check_global_mouse_click(&mut self, ctx: &mut FrameCtx<'_>) {
         // Check for backtick/grave key (`) to select color
         if ctx.egui.input(|i| i.key_pressed(egui::Key::Backtick)) {
-            ctx.app.picker.current_color = ctx.app.cursor_pick_color;
+            let picked_color = ctx.app.cursor_pick_color;
+            ctx.app.picker.current_color = picked_color;
+
+            // Add to picking history (avoid duplicates of the same color)
+            if ctx.app.color_picking_history.is_empty()
+                || ctx.app.color_picking_history.last() != Some(&picked_color)
+            {
+                ctx.app.color_picking_history.push(picked_color);
+
+                // Keep history limited to last 20 colors
+                if ctx.app.color_picking_history.len() > 20 {
+                    ctx.app.color_picking_history.remove(0);
+                }
+            }
+
             ctx.app.color_picking_enabled = false;
         }
 

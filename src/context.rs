@@ -35,6 +35,7 @@ pub struct AppCtx {
 
     pub zoom_window_dragged: bool,
     pub color_picking_enabled: bool,
+    pub color_picking_history: Vec<Color>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -73,6 +74,7 @@ impl Default for AppCtx {
             central_panel_tab: CentralPanelTab::Jwt,
             zoom_window_dragged: false,
             color_picking_enabled: false,
+            color_picking_history: Vec::new(),
         }
     }
 }
