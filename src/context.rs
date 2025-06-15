@@ -34,6 +34,7 @@ pub struct AppCtx {
     pub central_panel_tab: CentralPanelTab,
 
     pub zoom_window_dragged: bool,
+    pub color_picking_enabled: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -71,6 +72,7 @@ impl Default for AppCtx {
             current_selected_color: Color::black(),
             central_panel_tab: CentralPanelTab::Jwt,
             zoom_window_dragged: false,
+            color_picking_enabled: false,
         }
     }
 }
@@ -82,6 +84,7 @@ impl AppCtx {
     pub fn new(context: &CreationContext) -> Self {
         Self {
             settings: settings::load_global(context.storage).unwrap_or_default(),
+            color_picking_enabled: false,
             ..Default::default()
         }
     }
@@ -158,6 +161,7 @@ impl AppCtx {
 
             #[cfg(not(target_arch = "wasm32"))]
             if let Some(path) = Palettes::dir("d_tools") {
+                println!("Loading palettes from: {}", path.display());
                 match Palettes::load(path.join(Palettes::FILE_NAME)) {
                     Ok(palettes) => self.palettes = palettes,
                     Err(e) => append_global_error(format!("failed to load palettes, {e:?}")),

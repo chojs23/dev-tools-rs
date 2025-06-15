@@ -87,6 +87,11 @@ impl eframe::App for App {
 
             self.display_windows(&mut ctx);
 
+            // Global mouse click detection for color picking
+            if ctx.app.color_picking_enabled {
+                self.check_global_mouse_click(&mut ctx);
+            }
+
             if let Ok(mut stack) = ERROR_STACK.try_lock() {
                 while let Some(error) = stack.errors.pop_front() {
                     self.error_display.add_error(error);
@@ -135,7 +140,7 @@ impl App {
                 frame: None,
             };
 
-            // ctx.app.load_palettes(context.storage);
+            ctx.app.load_palettes(context.storage);
 
             if prefer_dark {
                 ctx.set_dark_theme();
@@ -228,5 +233,18 @@ impl App {
     fn color_picker_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut egui::Ui) {
         self.error_display.render(ctx, ui);
         self.color_picker_panel.display(ctx, ui);
+    }
+
+    fn check_global_mouse_click(&mut self, ctx: &mut FrameCtx<'_>) {
+        // Check for backtick/grave key (`) to select color
+        if ctx.egui.input(|i| i.key_pressed(egui::Key::Backtick)) {
+            ctx.app.picker.current_color = ctx.app.cursor_pick_color;
+            ctx.app.color_picking_enabled = false;
+        }
+
+        // Check for Escape key to cancel picking
+        if ctx.egui.input(|i| i.key_pressed(egui::Key::Escape)) {
+            ctx.app.color_picking_enabled = false;
+        }
     }
 }

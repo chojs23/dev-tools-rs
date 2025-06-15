@@ -65,25 +65,27 @@ impl Default for ZoomPicker {
 }
 impl ZoomPicker {
     pub fn display(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
-        if let Some(picker) = self.display_picker.clone() {
-            if let Ok(color) = picker.get_color_under_cursor() {
-                ctx.app.cursor_pick_color = color;
-                ui.horizontal(|ui| {
-                    ui.label("Color at cursor: ");
-                    self.zoom_picker_impl(ctx, ui, picker);
-                });
-                let cb = ColorBox::builder()
-                    .size((CURRENT_COLOR_BOX_SIZE, CURRENT_COLOR_BOX_SIZE))
-                    .color(color)
-                    .label(true)
-                    .hover_help(COLORBOX_PICK_TOOLTIP)
-                    .border(true)
-                    .build();
-                ui.horizontal(|ui| {
-                    cb.display(ctx, ui);
-                });
-            }
-        };
+        if ctx.app.color_picking_enabled {
+            if let Some(picker) = self.display_picker.clone() {
+                if let Ok(color) = picker.get_color_under_cursor() {
+                    ctx.app.cursor_pick_color = color;
+                    ui.horizontal(|ui| {
+                        ui.label("Color at cursor: ");
+                        self.zoom_picker_impl(ctx, ui, picker);
+                    });
+                    let cb = ColorBox::builder()
+                        .size((CURRENT_COLOR_BOX_SIZE, CURRENT_COLOR_BOX_SIZE))
+                        .color(color)
+                        .label(true)
+                        .hover_help(COLORBOX_PICK_TOOLTIP)
+                        .border(true)
+                        .build();
+                    ui.horizontal(|ui| {
+                        cb.display(ctx, ui);
+                    });
+                }
+            };
+        }
     }
 
     #[cfg(any(target_os = "linux", windows))]

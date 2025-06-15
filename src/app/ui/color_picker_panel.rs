@@ -66,6 +66,21 @@ impl ColorPickerPanel {
             {
                 ctx.app.add_cur_color();
             }
+
+            let pick_text = if ctx.app.color_picking_enabled {
+                "Picking color..."
+            } else {
+                "Pick Color"
+            };
+
+            if ui
+                .button(pick_text)
+                .on_hover_text("Click to toggle color picking from screen. When picking: press ` (backtick) to select color, or Esc to cancel")
+                .on_hover_cursor(CursorIcon::Crosshair)
+                .clicked()
+            {
+                ctx.app.color_picking_enabled = !ctx.app.color_picking_enabled;
+            }
         });
 
         let cb = ColorBox::builder()
