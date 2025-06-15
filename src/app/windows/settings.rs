@@ -110,7 +110,7 @@ impl SettingsWindow {
                         self.set_error(e);
                     }
                 }
-                let path = dir.join("config.yaml");
+                let path = dir.join("settings.yaml");
                 if let Err(e) = app_ctx.settings.save(&path) {
                     self.set_error(e);
                 } else {

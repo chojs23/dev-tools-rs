@@ -135,7 +135,7 @@ impl App {
                 frame: None,
             };
 
-            ctx.app.load_palettes(context.storage);
+            // ctx.app.load_palettes(context.storage);
 
             if prefer_dark {
                 ctx.set_dark_theme();

@@ -1,8 +1,5 @@
-use std::collections::HashMap;
-
 use anyhow::{bail, Result};
 use jsonwebtoken::DecodingKey;
-use serde::{Deserialize, Serialize};
 use serde_json::Map;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]

@@ -228,10 +228,6 @@ impl Settings {
             return Some(dir.join(name));
         }
 
-        if let Some(dir) = dirs::home_dir() {
-            return Some(dir.join(name));
-        }
-
         None
     }
 }
