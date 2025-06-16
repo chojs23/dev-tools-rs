@@ -11,6 +11,7 @@ use crate::{
     encoding::EncodingProcessor,
     error::append_global_error,
     jwt::JwtEncoderDecoder,
+    regex::RegexProcessor,
     render::{TextureAllocator, TextureManager},
     screen_size::ScreenSize,
     settings::{self, ColorDisplayFmtEnum, Settings},
@@ -27,6 +28,7 @@ pub struct AppCtx {
 
     pub jwt: JwtEncoderDecoder,
     pub encoding: EncodingProcessor,
+    pub regex: RegexProcessor,
     pub picker: ColorPicker,
     pub palettes: Palettes,
 
@@ -70,6 +72,7 @@ impl Default for AppCtx {
             },
             jwt: JwtEncoderDecoder::default(),
             encoding: EncodingProcessor::default(),
+            regex: RegexProcessor::default(),
             picker: ColorPicker::default(),
             palettes: Palettes::default(),
             cursor_pick_color: Color::black(),

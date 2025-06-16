@@ -10,7 +10,7 @@ use eframe::{
 };
 use once_cell::sync::{Lazy, OnceCell};
 
-use ui::{ColorPickerPanel, EncodingPanel, ErrorDisplay, JwtPanel, TopPanel};
+use ui::{ColorPickerPanel, EncodingPanel, ErrorDisplay, JwtPanel, RegexPanel, TopPanel};
 use ui_trait::{UiComponent, UiPanel};
 use windows::SettingsWindow;
 
@@ -39,6 +39,7 @@ pub const CURRENT_COLOR_BOX_SIZE: f32 = 40.0;
 pub enum CentralPanelTab {
     Jwt,
     Encoding,
+    Regex,
     ColorPicker,
 }
 
@@ -53,6 +54,7 @@ pub struct App {
     pub top_panel: TopPanel,
     pub jwt_panel: JwtPanel,
     pub encoding_panel: EncodingPanel,
+    pub regex_panel: RegexPanel,
     pub color_picker_panel: ColorPickerPanel,
     pub error_display: ErrorDisplay,
 }
@@ -125,6 +127,7 @@ impl App {
             top_panel: TopPanel::new(),
             jwt_panel: JwtPanel::new(),
             encoding_panel: EncodingPanel::new(),
+            regex_panel: RegexPanel::new(),
             color_picker_panel: ColorPickerPanel::new(),
             error_display: ErrorDisplay::new(),
         });
@@ -226,6 +229,7 @@ impl App {
                 CentralPanelTab::Jwt => self.jwt_ui(ctx, ui),
                 CentralPanelTab::ColorPicker => self.color_picker_ui(ctx, ui),
                 CentralPanelTab::Encoding => self.encoding_panel_ui(ctx, ui),
+                CentralPanelTab::Regex => self.regex_panel_ui(ctx, ui),
             });
     }
 
@@ -242,6 +246,11 @@ impl App {
     fn encoding_panel_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut egui::Ui) {
         self.error_display.render(ctx, ui);
         self.encoding_panel.display(ctx, ui);
+    }
+
+    fn regex_panel_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut egui::Ui) {
+        self.error_display.render(ctx, ui);
+        self.regex_panel.display(ctx, ui);
     }
 
     fn check_backtick_key_pressed(&mut self, ctx: &mut FrameCtx<'_>) {

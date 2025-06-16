@@ -911,6 +911,7 @@ dependencies = [
  "nom",
  "objc",
  "once_cell",
+ "regex",
  "serde",
  "serde_json",
  "serde_yaml",

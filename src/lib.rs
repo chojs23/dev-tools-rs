@@ -7,6 +7,7 @@ mod encoding;
 mod error;
 mod jwt;
 mod math;
+mod regex;
 mod render;
 mod screen_size;
 mod settings;
