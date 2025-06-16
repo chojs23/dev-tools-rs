@@ -8,6 +8,7 @@ use crate::{
     app::{CentralPanelTab, DARK_VISUALS, LIGHT_VISUALS},
     color::{Color, ColorFormat, Palettes},
     color_picker::ColorPicker,
+    encoding::EncodingProcessor,
     error::append_global_error,
     jwt::JwtEncoderDecoder,
     render::{TextureAllocator, TextureManager},
@@ -25,6 +26,7 @@ pub struct AppCtx {
     pub sidepanel: SidePanelData,
 
     pub jwt: JwtEncoderDecoder,
+    pub encoding: EncodingProcessor,
     pub picker: ColorPicker,
     pub palettes: Palettes,
 
@@ -67,6 +69,7 @@ impl Default for AppCtx {
                 response_size: (0., 0.).into(),
             },
             jwt: JwtEncoderDecoder::default(),
+            encoding: EncodingProcessor::default(),
             picker: ColorPicker::default(),
             palettes: Palettes::default(),
             cursor_pick_color: Color::black(),

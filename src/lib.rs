@@ -3,6 +3,7 @@ mod color;
 mod color_picker;
 mod context;
 mod display_picker;
+mod encoding;
 mod error;
 mod jwt;
 mod math;

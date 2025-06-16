@@ -10,7 +10,7 @@ use eframe::{
 };
 use once_cell::sync::{Lazy, OnceCell};
 
-use ui::{ColorPickerPanel, ErrorDisplay, JwtPanel, TopPanel};
+use ui::{ColorPickerPanel, EncodingPanel, ErrorDisplay, JwtPanel, TopPanel};
 use ui_trait::{UiComponent, UiPanel};
 use windows::SettingsWindow;
 
@@ -38,6 +38,7 @@ pub const CURRENT_COLOR_BOX_SIZE: f32 = 40.0;
 #[derive(Clone, Debug)]
 pub enum CentralPanelTab {
     Jwt,
+    Encoding,
     ColorPicker,
 }
 
@@ -51,6 +52,7 @@ pub struct App {
     pub windows: Windows,
     pub top_panel: TopPanel,
     pub jwt_panel: JwtPanel,
+    pub encoding_panel: EncodingPanel,
     pub color_picker_panel: ColorPickerPanel,
     pub error_display: ErrorDisplay,
 }
@@ -87,9 +89,9 @@ impl eframe::App for App {
 
             self.display_windows(&mut ctx);
 
-            // Global mouse click detection for color picking
+            // Global detection for color picking
             if ctx.app.color_picking_enabled {
-                self.check_global_mouse_click(&mut ctx);
+                self.check_backtick_key_pressed(&mut ctx);
             }
 
             if let Ok(mut stack) = ERROR_STACK.try_lock() {
@@ -122,6 +124,7 @@ impl App {
             windows: Windows::default(),
             top_panel: TopPanel::new(),
             jwt_panel: JwtPanel::new(),
+            encoding_panel: EncodingPanel::new(),
             color_picker_panel: ColorPickerPanel::new(),
             error_display: ErrorDisplay::new(),
         });
@@ -222,6 +225,7 @@ impl App {
             .show(ctx.egui, |ui| match ctx.app.central_panel_tab {
                 CentralPanelTab::Jwt => self.jwt_ui(ctx, ui),
                 CentralPanelTab::ColorPicker => self.color_picker_ui(ctx, ui),
+                CentralPanelTab::Encoding => self.encoding_panel_ui(ctx, ui),
             });
     }
 
@@ -235,7 +239,14 @@ impl App {
         self.color_picker_panel.display(ctx, ui);
     }
 
-    fn check_global_mouse_click(&mut self, ctx: &mut FrameCtx<'_>) {
+    fn encoding_panel_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut egui::Ui) {
+        self.error_display.render(ctx, ui);
+        self.encoding_panel.display(ctx, ui);
+    }
+
+    fn check_backtick_key_pressed(&mut self, ctx: &mut FrameCtx<'_>) {
+        //TODO: Capture mouse clicked event
+
         // Check for backtick/grave key (`) to select color
         if ctx.egui.input(|i| i.key_pressed(egui::Key::Backtick)) {
             let picked_color = ctx.app.cursor_pick_color;
