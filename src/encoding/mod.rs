@@ -19,6 +19,7 @@ pub struct EncodingProcessor {
     pub output: String,
     pub encoding_type: EncodingType,
     pub handle_line_breaks: bool,
+    pub live_conversion: bool,
 }
 
 impl EncodingProcessor {
@@ -28,6 +29,7 @@ impl EncodingProcessor {
             output: String::new(),
             encoding_type: EncodingType::Base64,
             handle_line_breaks: false,
+            live_conversion: false,
         }
     }
 
