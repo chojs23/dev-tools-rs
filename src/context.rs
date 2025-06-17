@@ -6,16 +6,20 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     app::{CentralPanelTab, DARK_VISUALS, LIGHT_VISUALS},
-    color::{Color, ColorFormat, Palettes},
-    color_picker::ColorPicker,
-    encoding::EncodingProcessor,
-    error::append_global_error,
-    generators::GeneratorProcessor, // Add this line
-    jwt::JwtEncoderDecoder,
-    regex::RegexProcessor,
-    render::{TextureAllocator, TextureManager},
-    screen_size::ScreenSize,
-    settings::{self, ColorDisplayFmtEnum, Settings},
+    core::{
+        color::{palettes::Palettes, Color, ColorFormat},
+        encoding::EncodingProcessor,
+        generators::GeneratorProcessor,
+        jwt::JwtEncoderDecoder,
+        regex::RegexProcessor,
+    },
+    settings::{ColorDisplayFmtEnum, Settings},
+    types::error::append_global_error,
+    ui::components::color_picker::ColorPicker,
+    utils::{
+        render::{TextureAllocator, TextureManager},
+        screen_size::ScreenSize,
+    },
 };
 
 #[derive(Clone, Debug)]
@@ -94,7 +98,7 @@ impl AppCtx {
     /// Initialize a new context
     pub fn new(context: &CreationContext) -> Self {
         Self {
-            settings: settings::load_global(context.storage).unwrap_or_default(),
+            settings: crate::settings::load_global(context.storage).unwrap_or_default(),
             color_picking_enabled: false,
             ..Default::default()
         }

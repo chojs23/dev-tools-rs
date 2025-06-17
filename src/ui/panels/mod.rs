@@ -1,0 +1,7 @@
+pub mod color_picker_panel;
+pub mod encoding_panel;
+pub mod error_display;
+pub mod generators_panel;
+pub mod jwt_panel;
+pub mod regex_panel;
+pub mod top_panel;

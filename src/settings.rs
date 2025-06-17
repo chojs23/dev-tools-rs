@@ -10,10 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{
-    color::{ChromaticAdaptationMethod, ColorFormat, ColorHarmony, Illuminant, RgbWorkingSpace},
-    ui::layout::HarmonyLayout,
-};
+use crate::{core::color::*, ui::components::layout::HarmonyLayout};
 
 pub const DEFAULT_PIXELS_PER_POINT: f32 = 1.0;
 

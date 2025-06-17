@@ -1,23 +1,15 @@
 mod app;
-mod color;
-mod color_picker;
 mod context;
-mod display_picker;
-mod encoding;
-mod error;
-mod generators;
-mod jwt;
-mod math;
-mod regex;
-mod render;
-mod screen_size;
+mod core;
+mod platform;
 mod settings;
+mod types;
 mod ui;
-mod zoom_picker;
-
-use anyhow::{Context, Result};
+mod utils;
 
 pub use app::App as DevToolsApp;
+
+use anyhow::{Context, Result};
 
 #[cfg(not(target_arch = "wasm32"))]
 fn save_to_clipboard(text: String) -> Result<()> {
