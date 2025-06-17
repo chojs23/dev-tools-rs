@@ -8,13 +8,24 @@ use crate::{
 use eframe::egui::{Color32, FontId, Pos2, ScrollArea, TextBuffer, TextEdit, Ui};
 use std::time::{Duration, Instant};
 
+static COPY_ANIMATION_DURATION: Duration = Duration::from_millis(500);
+static ERROR_ANIMATION_DURATION: Duration = Duration::from_millis(1000);
+static MAXIMUM_BULK_GENERATION_COUNT: usize = 1000;
+
 pub struct GeneratorsPanel {
     copy_animation: Option<CopyAnimation>,
+    error_animation: Option<ErrorAnimation>,
 }
 
 struct CopyAnimation {
     start_time: Instant,
     start_pos: Pos2,
+}
+
+struct ErrorAnimation {
+    start_time: Instant,
+    start_pos: Pos2,
+    message: String,
 }
 
 impl CopyAnimation {
@@ -26,16 +37,43 @@ impl CopyAnimation {
     }
 
     fn is_finished(&self) -> bool {
-        self.start_time.elapsed() > Duration::from_millis(1000)
+        self.start_time.elapsed() > COPY_ANIMATION_DURATION
     }
 
     fn get_current_pos_and_alpha(&self) -> (Pos2, f32) {
         let elapsed = self.start_time.elapsed().as_millis() as f32;
-        let duration = 1000.0;
+        let duration = COPY_ANIMATION_DURATION.as_millis() as f32;
         let progress = (elapsed / duration).min(1.0);
 
         // Move up and fade out
-        let y_offset = progress * 50.0; // Move 50 pixels up
+        let y_offset = progress * 25.0;
+        let current_pos = Pos2::new(self.start_pos.x, self.start_pos.y - y_offset);
+        let alpha = (1.0 - progress).max(0.0);
+
+        (current_pos, alpha)
+    }
+}
+
+impl ErrorAnimation {
+    fn new(pos: Pos2, message: String) -> Self {
+        Self {
+            start_time: Instant::now(),
+            start_pos: pos,
+            message,
+        }
+    }
+
+    fn is_finished(&self) -> bool {
+        self.start_time.elapsed() > ERROR_ANIMATION_DURATION
+    }
+
+    fn get_current_pos_and_alpha(&self) -> (Pos2, f32) {
+        let elapsed = self.start_time.elapsed().as_millis() as f32;
+        let duration = ERROR_ANIMATION_DURATION.as_millis() as f32;
+        let progress = (elapsed / duration).min(1.0);
+
+        // Move up and fade out
+        let y_offset = progress * 30.0; // Move 30 pixels up
         let current_pos = Pos2::new(self.start_pos.x, self.start_pos.y - y_offset);
         let alpha = (1.0 - progress).max(0.0);
 
@@ -47,7 +85,18 @@ impl GeneratorsPanel {
     pub fn new() -> Self {
         Self {
             copy_animation: None,
+            error_animation: None,
         }
+    }
+
+    fn copy_individual_to_clipboard(&self, text: &str) -> Result<(), Box<dyn std::error::Error>> {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            use arboard::Clipboard;
+            let mut clipboard = Clipboard::new()?;
+            clipboard.set_text(text)?;
+        }
+        Ok(())
     }
 }
 
@@ -94,9 +143,15 @@ impl UiPanel for GeneratorsPanel {
 
                 if response.changed() {
                     if let Ok(count) = count_text.parse::<usize>() {
-                        if count > 0 && count <= 1000 {
-                            // Reasonable limit
+                        if count > 0 && count <= MAXIMUM_BULK_GENERATION_COUNT {
                             ctx.app.generator.generated_count = count;
+                        } else if count > MAXIMUM_BULK_GENERATION_COUNT {
+                            let error_message = format!(
+                                "Cannot exceed maximum count of {} (entered: {})",
+                                MAXIMUM_BULK_GENERATION_COUNT, count
+                            );
+                            self.error_animation =
+                                Some(ErrorAnimation::new(response.rect.center(), error_message));
                         }
                     }
                 }
@@ -111,7 +166,7 @@ impl UiPanel for GeneratorsPanel {
                     }
                 }
 
-                let copy_button = ui.button("📋 Copy");
+                let copy_button = ui.button("📋 Copy ALL");
                 if copy_button.clicked() {
                     match ctx.app.generator.copy_to_clipboard() {
                         Ok(()) => {
@@ -134,14 +189,39 @@ impl UiPanel for GeneratorsPanel {
 
             ui.label("Generated Output:");
             ScrollArea::vertical().show(ui, |ui| {
-                ui.add(
-                    TextEdit::multiline(&mut ctx.app.generator.output.as_str())
-                        .desired_width(f32::INFINITY),
-                );
+                if ctx.app.generator.output.is_empty() {
+                    ui.label("No output generated yet.");
+                } else {
+                    let outputs: Vec<&str> = ctx.app.generator.output.lines().collect();
+
+                    ui.vertical(|ui| {
+                        for (index, output) in outputs.iter().enumerate() {
+                            if !output.trim().is_empty() {
+                                let button_response = ui.add(
+                                    eframe::egui::Button::new(*output)
+                                        .min_size([output.len() as f32 * 2.0, 30.0].into())
+                                        .wrap(false),
+                                );
+
+                                if button_response.clicked() {
+                                    if let Err(e) = self.copy_individual_to_clipboard(output) {
+                                        append_global_error(e.to_string());
+                                    } else {
+                                        self.copy_animation =
+                                            Some(CopyAnimation::new(button_response.rect.center()));
+                                    }
+                                }
+
+                                if index < outputs.len() - 1 {
+                                    ui.add_space(2.0);
+                                }
+                            }
+                        }
+                    });
+                }
             });
         });
 
-        // Render copy animation
         if let Some(animation) = &self.copy_animation {
             if animation.is_finished() {
                 self.copy_animation = None;
@@ -157,7 +237,25 @@ impl UiPanel for GeneratorsPanel {
                     color,
                 );
 
-                // Request repaint for smooth animation
+                ctx.egui.request_repaint();
+            }
+        }
+
+        if let Some(animation) = &self.error_animation {
+            if animation.is_finished() {
+                self.error_animation = None;
+            } else {
+                let (pos, alpha) = animation.get_current_pos_and_alpha();
+                let color = Color32::from_rgba_premultiplied(255, 100, 100, (255.0 * alpha) as u8);
+
+                ui.painter().text(
+                    pos,
+                    eframe::egui::Align2::CENTER_CENTER,
+                    &animation.message,
+                    FontId::proportional(14.0),
+                    color,
+                );
+
                 ctx.egui.request_repaint();
             }
         }
