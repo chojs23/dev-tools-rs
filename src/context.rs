@@ -10,6 +10,7 @@ use crate::{
     color_picker::ColorPicker,
     encoding::EncodingProcessor,
     error::append_global_error,
+    generators::GeneratorProcessor, // Add this line
     jwt::JwtEncoderDecoder,
     regex::RegexProcessor,
     render::{TextureAllocator, TextureManager},
@@ -29,6 +30,7 @@ pub struct AppCtx {
     pub jwt: JwtEncoderDecoder,
     pub encoding: EncodingProcessor,
     pub regex: RegexProcessor,
+    pub generator: GeneratorProcessor, // Add this line
     pub picker: ColorPicker,
     pub palettes: Palettes,
 
@@ -73,6 +75,7 @@ impl Default for AppCtx {
             jwt: JwtEncoderDecoder::default(),
             encoding: EncodingProcessor::default(),
             regex: RegexProcessor::default(),
+            generator: GeneratorProcessor::default(), // Add this line
             picker: ColorPicker::default(),
             palettes: Palettes::default(),
             cursor_pick_color: Color::black(),

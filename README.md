@@ -20,7 +20,6 @@ _These features are a work in progress_
   - JWT (JSON Web Tokens)
   - Base32, Base64, URL Base64, MIME Base64
   - URL encoding
-  - Handle line breaks
 
 - **Text Utilities**
 

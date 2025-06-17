@@ -24,6 +24,12 @@ serde = { version = "1", features = ["derive"] }
 serde_yaml = "0.9"
 serde_json = "1"
 
+# ID and password generation
+uuid = { version = "1.0", features = ["v4", "serde"] }
+ulid = "1.0"
+nanoid = "0.4"
+rand = "0.8"
+
 [target.'cfg(target_os = "linux")'.dependencies]
 x11rb = { version = "0.13", features = ["image", "cursor", "resource_manager"] }
 

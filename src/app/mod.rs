@@ -10,7 +10,9 @@ use eframe::{
 };
 use once_cell::sync::{Lazy, OnceCell};
 
-use ui::{ColorPickerPanel, EncodingPanel, ErrorDisplay, JwtPanel, RegexPanel, TopPanel};
+use ui::{
+    ColorPickerPanel, EncodingPanel, ErrorDisplay, GeneratorsPanel, JwtPanel, RegexPanel, TopPanel,
+};
 use ui_trait::{UiComponent, UiPanel};
 use windows::SettingsWindow;
 
@@ -41,6 +43,7 @@ pub enum CentralPanelTab {
     Encoding,
     Regex,
     ColorPicker,
+    Generators,
 }
 
 #[derive(Default)]
@@ -56,6 +59,7 @@ pub struct App {
     pub encoding_panel: EncodingPanel,
     pub regex_panel: RegexPanel,
     pub color_picker_panel: ColorPickerPanel,
+    pub generators_panel: GeneratorsPanel,
     pub error_display: ErrorDisplay,
 }
 
@@ -129,6 +133,7 @@ impl App {
             encoding_panel: EncodingPanel::new(),
             regex_panel: RegexPanel::new(),
             color_picker_panel: ColorPickerPanel::new(),
+            generators_panel: GeneratorsPanel::new(),
             error_display: ErrorDisplay::new(),
         });
 
@@ -230,6 +235,7 @@ impl App {
                 CentralPanelTab::ColorPicker => self.color_picker_ui(ctx, ui),
                 CentralPanelTab::Encoding => self.encoding_panel_ui(ctx, ui),
                 CentralPanelTab::Regex => self.regex_panel_ui(ctx, ui),
+                CentralPanelTab::Generators => self.generators_panel_ui(ctx, ui),
             });
     }
 
@@ -251,6 +257,11 @@ impl App {
     fn regex_panel_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut egui::Ui) {
         self.error_display.render(ctx, ui);
         self.regex_panel.display(ctx, ui);
+    }
+
+    fn generators_panel_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut egui::Ui) {
+        self.error_display.render(ctx, ui);
+        self.generators_panel.display(ctx, ui);
     }
 
     fn check_backtick_key_pressed(&mut self, ctx: &mut FrameCtx<'_>) {

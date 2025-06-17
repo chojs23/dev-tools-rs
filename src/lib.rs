@@ -5,6 +5,7 @@ mod context;
 mod display_picker;
 mod encoding;
 mod error;
+mod generators;
 mod jwt;
 mod math;
 mod regex;
