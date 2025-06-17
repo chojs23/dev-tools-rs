@@ -162,16 +162,16 @@ impl App {
 
         let mut fonts = egui::FontDefinitions::default();
         fonts.font_data.insert(
-            "Firacode".to_string(),
+            "Iosevka".to_string(),
             egui::FontData::from_static(include_bytes!(
-                "../../assets/fonts/FiraCode/FiraCode-Regular.ttf"
+                "../../assets/fonts/Iosevka/IosevkaNerdFont-Regular.ttf"
             )),
         );
         fonts
             .families
             .get_mut(&egui::FontFamily::Monospace)
             .unwrap()
-            .insert(0, "Firacode".to_owned());
+            .insert(0, "Iosevka".to_owned());
 
         context.egui_ctx.set_fonts(fonts);
 
