@@ -4,7 +4,9 @@ use crate::{
     error::append_global_error,
     ui::{DOUBLE_SPACE, HALF_SPACE, SPACE},
 };
-use eframe::egui::{Color32, CursorIcon, DragValue, Resize, RichText, ScrollArea, Ui, Window};
+use eframe::egui::{
+    Align, Color32, CursorIcon, DragValue, Layout, Resize, RichText, ScrollArea, Ui, Window,
+};
 
 pub struct RegexPanel;
 
@@ -28,7 +30,6 @@ impl RegexPanel {
         ui.vertical(|ui| {
             self.render_pattern_section(ctx, ui);
             ui.add_space(SPACE);
-            println! {"available height: {}", ui.available_height()};
             self.render_options_section(ctx, ui);
             ui.add_space(SPACE);
             self.render_action_buttons(ctx, ui);
@@ -40,25 +41,40 @@ impl RegexPanel {
     }
 
     fn render_pattern_section(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
-        ui.vertical(|ui| {
-            ui.label("Regular Expression Pattern");
-            let available_height = ui.available_height() * 0.1;
-            ScrollArea::vertical()
-                .id_source("regex_pattern")
-                .max_height(available_height)
-                .stick_to_bottom(false)
-                .show(ui, |ui| {
-                    let response = ui.text_edit_multiline(&mut ctx.app.regex.pattern);
+        //TODO: resizable scroll area looks suck
+        Resize::default()
+            .id_source("regex_pattern_container")
+            .show(ui, |ui| {
+                ui.label("Regular Expression Pattern");
+                ui.add_space(HALF_SPACE);
+                ScrollArea::vertical()
+                    .id_source("regex_pattern")
+                    .stick_to_bottom(false)
+                    .drag_to_scroll(false)
+                    .show(ui, |ui| {
+                        ui.set_max_height(ui.available_height() * 0.9);
+                        ui.set_max_width(ui.available_width() * 1.0);
+                        ui.with_layout(
+                            Layout::top_down(Align::Min)
+                                .with_main_justify(true)
+                                .with_cross_justify(true),
+                            |ui| {
+                                let response = ui.text_edit_multiline(&mut ctx.app.regex.pattern);
 
-                    // Auto-process when pattern changes if text is not empty
-                    if response.changed() && !ctx.app.regex.text.is_empty() {
-                        if let Err(e) = ctx.app.regex.process() {
-                            // Error is already stored in the result, no need to display here
-                            let _ = e;
-                        }
-                    }
-                });
-        });
+                                // Auto-process when pattern changes if text is not empty
+                                if response.changed() && !ctx.app.regex.text.is_empty() {
+                                    if let Err(e) = ctx.app.regex.process() {
+                                        // Error is already stored in the result, no need to display here
+                                        let _ = e;
+                                    }
+                                }
+                            },
+                        )
+                    });
+
+                //To ensure resize handles are visible
+                ui.add_space(HALF_SPACE);
+            });
     }
 
     fn render_text_section(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {

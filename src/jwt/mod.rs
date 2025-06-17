@@ -1,5 +1,6 @@
 use anyhow::{bail, Result};
 use jsonwebtoken::DecodingKey;
+use serde::{Deserialize, Serialize};
 use serde_json::Map;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
@@ -33,7 +34,7 @@ impl From<Algorithm> for jsonwebtoken::Algorithm {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct JwtEncoderDecoder {
     pub encoded: String,
     pub decoded: String,
@@ -42,13 +43,27 @@ pub struct JwtEncoderDecoder {
     pub public_key: String,
     pub private_key: String,
     pub verified: Option<bool>,
+    pub live_conversion: bool,
+}
+
+impl Default for JwtEncoderDecoder {
+    fn default() -> Self {
+        Self {
+            encoded: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30".to_string(),
+            secret: "a-string-secret-at-least-256-bits-long".to_string(),
+            algorithm: Algorithm::HS256,
+            decoded: String::new(),
+            public_key: String::new(),
+            private_key: String::new(),
+            verified: None,
+            live_conversion: false,
+        }
+    }
 }
 
 impl JwtEncoderDecoder {
     pub fn new() -> Self {
-        Self {
-            ..Default::default()
-        }
+        Self::default()
     }
 
     pub fn clear(&mut self) {
@@ -59,6 +74,7 @@ impl JwtEncoderDecoder {
         self.public_key.clear();
         self.private_key.clear();
         self.verified = None;
+        self.live_conversion = false;
     }
 
     pub fn get_header(&mut self) -> Result<String> {
@@ -145,7 +161,7 @@ impl JwtEncoderDecoder {
             }
             Err(err) => {
                 self.verified = Some(false);
-                anyhow::bail!(err)
+                bail!(err)
             }
         }
     }
@@ -174,7 +190,7 @@ impl JwtEncoderDecoder {
             }
             Err(err) => {
                 self.verified = Some(false);
-                anyhow::bail!(err)
+                bail!(err)
             }
         }
     }
