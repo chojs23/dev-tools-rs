@@ -22,6 +22,8 @@ impl UiPanel for JwtPanel {
     }
 }
 
+//TODO: Maybe remove live conversion and just use buttons for encode/decode.
+// Format error messages to be more user-friendly.
 impl JwtPanel {
     pub fn new() -> Self {
         Self
