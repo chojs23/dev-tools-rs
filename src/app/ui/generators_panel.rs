@@ -159,6 +159,52 @@ impl UiPanel for GeneratorsPanel {
 
             ui.add_space(SPACE);
 
+            // Password options (only show when Password generator is selected)
+            if ctx.app.generator.generator_type == GeneratorType::Password {
+                ui.group(|ui| {
+                    ui.label("Password Options:");
+                    ui.add_space(SPACE / 2.0);
+                    
+                    // Password length
+                    ui.horizontal(|ui| {
+                        ui.label("Length:");
+                        let mut length_text = ctx.app.generator.password_length.to_string();
+                        let response = ui.add(
+                            TextEdit::singleline(&mut length_text)
+                                .desired_width(60.0)
+                                .hint_text("12")
+                        );
+                        
+                        if response.changed() {
+                            if let Ok(length) = length_text.parse::<usize>() {
+                                if length > 0 && length <= 128 { // Reasonable limit for passwords
+                                    ctx.app.generator.password_length = length;
+                                } else if length > 128 {
+                                    let error_message = format!("Password length cannot exceed 128 characters! (entered: {})", length);
+                                    self.error_animation = Some(ErrorAnimation::new(
+                                        response.rect.center(),
+                                        error_message,
+                                    ));
+                                }
+                            }
+                        }
+                    });
+                    
+                    ui.add_space(SPACE / 2.0);
+                    
+                    // Character type options
+                    ui.horizontal_wrapped(|ui| {
+                        ui.checkbox(&mut ctx.app.generator.include_uppercase, "Uppercase (A-Z)");
+                        ui.checkbox(&mut ctx.app.generator.include_lowercase, "Lowercase (a-z)");
+                        ui.checkbox(&mut ctx.app.generator.include_numbers, "Numbers (0-9)");
+                        ui.checkbox(&mut ctx.app.generator.include_symbols, "Symbols (!@#$...)");
+                        ui.checkbox(&mut ctx.app.generator.exclude_ambiguous, "Exclude ambiguous (0,O,1,l,I)");
+                    });
+                });
+                
+                ui.add_space(SPACE);
+            }
+
             ui.horizontal(|ui| {
                 if ui.button("Generate").clicked() {
                     if let Err(e) = ctx.app.generator.generate() {

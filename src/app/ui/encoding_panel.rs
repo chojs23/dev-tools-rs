@@ -49,7 +49,7 @@ impl EncodingPanel {
                 .stick_to_bottom(false)
                 .show(ui, |ui| {
                     let response = ui.text_edit_multiline(&mut ctx.app.encoding.input);
-                    
+
                     // Trigger live encoding if enabled and input changed
                     if ctx.app.encoding.live_conversion && response.changed() {
                         if let Err(e) = ctx.app.encoding.encode() {
@@ -64,33 +64,43 @@ impl EncodingPanel {
         ui.horizontal(|ui| {
             ui.label("Encoding Type:");
             let mut encoding_changed = false;
-            
-            encoding_changed |= ui.radio_value(
-                &mut ctx.app.encoding.encoding_type,
-                EncodingType::Base64,
-                "Base64",
-            ).changed();
-            encoding_changed |= ui.radio_value(
-                &mut ctx.app.encoding.encoding_type,
-                EncodingType::Base64Url,
-                "Base64 URL",
-            ).changed();
-            encoding_changed |= ui.radio_value(
-                &mut ctx.app.encoding.encoding_type,
-                EncodingType::Base64Mime,
-                "Base64 MIME",
-            ).changed();
-            encoding_changed |= ui.radio_value(
-                &mut ctx.app.encoding.encoding_type,
-                EncodingType::Base32,
-                "Base32",
-            ).changed();
-            encoding_changed |= ui.radio_value(
-                &mut ctx.app.encoding.encoding_type,
-                EncodingType::UrlEncoding,
-                "URL Encoding",
-            ).changed();
-            
+
+            encoding_changed |= ui
+                .radio_value(
+                    &mut ctx.app.encoding.encoding_type,
+                    EncodingType::Base64,
+                    "Base64",
+                )
+                .changed();
+            encoding_changed |= ui
+                .radio_value(
+                    &mut ctx.app.encoding.encoding_type,
+                    EncodingType::Base64Url,
+                    "Base64 URL",
+                )
+                .changed();
+            encoding_changed |= ui
+                .radio_value(
+                    &mut ctx.app.encoding.encoding_type,
+                    EncodingType::Base64Mime,
+                    "Base64 MIME",
+                )
+                .changed();
+            encoding_changed |= ui
+                .radio_value(
+                    &mut ctx.app.encoding.encoding_type,
+                    EncodingType::Base32,
+                    "Base32",
+                )
+                .changed();
+            encoding_changed |= ui
+                .radio_value(
+                    &mut ctx.app.encoding.encoding_type,
+                    EncodingType::UrlEncoding,
+                    "URL Encoding",
+                )
+                .changed();
+
             // Trigger live encoding if enabled and encoding type changed
             if ctx.app.encoding.live_conversion && encoding_changed {
                 if let Err(e) = ctx.app.encoding.encode() {
@@ -102,11 +112,13 @@ impl EncodingPanel {
 
     fn render_options_section(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
         ui.horizontal(|ui| {
-            let line_breaks_changed = ui.checkbox(
-                &mut ctx.app.encoding.handle_line_breaks,
-                "Handle line breaks (\\n, \\r)",
-            ).changed();
-            
+            let line_breaks_changed = ui
+                .checkbox(
+                    &mut ctx.app.encoding.handle_line_breaks,
+                    "Handle line breaks (\\n, \\r)",
+                )
+                .changed();
+
             // Trigger live encoding if enabled and line breaks option changed
             if ctx.app.encoding.live_conversion && line_breaks_changed {
                 if let Err(e) = ctx.app.encoding.encode() {
@@ -118,16 +130,13 @@ impl EncodingPanel {
 
     fn render_action_buttons(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
         ui.horizontal(|ui| {
-            ui.checkbox(
-                &mut ctx.app.encoding.live_conversion,
-                "Live conversion",
-            );
+            ui.checkbox(&mut ctx.app.encoding.live_conversion, "Live conversion");
 
             let live_enabled = ctx.app.encoding.live_conversion;
 
             ui.add_enabled_ui(!live_enabled, |ui| {
                 if ui
-                    .button("⬆ Encode")
+                    .button("⬇ Encode")
                     .on_hover_cursor(CursorIcon::PointingHand)
                     .clicked()
                 {
@@ -140,7 +149,7 @@ impl EncodingPanel {
                 }
 
                 if ui
-                    .button("⬇ Decode")
+                    .button("⬆ Decode")
                     .on_hover_cursor(CursorIcon::PointingHand)
                     .clicked()
                 {
@@ -182,7 +191,7 @@ impl EncodingPanel {
                 .stick_to_bottom(false)
                 .show(ui, |ui| {
                     let response = ui.text_edit_multiline(&mut ctx.app.encoding.output);
-                    
+
                     // Trigger live decoding if enabled and output changed
                     if ctx.app.encoding.live_conversion && response.changed() {
                         // Store the encoded text that user just typed
