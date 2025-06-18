@@ -90,6 +90,14 @@ impl TopPanel {
                 ctx.app.sidepanel.show = false;
             }
         );
+        add_button_if!(
+            "DateTime",
+            matches!(ctx.app.central_panel_tab, CentralPanelTab::DateTime),
+            {
+                ctx.app.central_panel_tab = CentralPanelTab::DateTime;
+                ctx.app.sidepanel.show = false;
+            }
+        );
     }
 
     pub fn render_right_side_buttons(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) -> bool {

@@ -30,6 +30,9 @@ ulid = "1.0"
 nanoid = "0.4"
 rand = "0.9.1"
 
+# Date and time handling
+chrono = { version = "0.4.41", features = ["serde"] }
+
 [target.'cfg(target_os = "linux")'.dependencies]
 x11rb = { version = "0.13", features = ["image", "cursor", "resource_manager"] }
 

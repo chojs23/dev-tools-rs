@@ -8,6 +8,7 @@ use crate::{
     app::{CentralPanelTab, DARK_VISUALS, LIGHT_VISUALS},
     core::{
         color::{palettes::Palettes, Color, ColorFormat},
+        datetime::DateTimeProcessor,
         encoding::EncodingProcessor,
         generators::GeneratorProcessor,
         jwt::JwtEncoderDecoder,
@@ -34,7 +35,8 @@ pub struct AppCtx {
     pub jwt: JwtEncoderDecoder,
     pub encoding: EncodingProcessor,
     pub regex: RegexProcessor,
-    pub generator: GeneratorProcessor, // Add this line
+    pub generator: GeneratorProcessor,
+    pub datetime: DateTimeProcessor,
     pub picker: ColorPicker,
     pub palettes: Palettes,
 
@@ -79,7 +81,8 @@ impl Default for AppCtx {
             jwt: JwtEncoderDecoder::default(),
             encoding: EncodingProcessor::default(),
             regex: RegexProcessor::default(),
-            generator: GeneratorProcessor::default(), // Add this line
+            generator: GeneratorProcessor::default(),
+            datetime: DateTimeProcessor::default(),
             picker: ColorPicker::default(),
             palettes: Palettes::default(),
             cursor_pick_color: Color::black(),

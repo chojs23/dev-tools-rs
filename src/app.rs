@@ -12,7 +12,7 @@ use crate::{
     ui::{
         components::{colors::*, *},
         panels::{
-            color_picker_panel::ColorPickerPanel, encoding_panel::EncodingPanel,
+            color_picker_panel::ColorPickerPanel, datetime_panel::DateTimePanel, encoding_panel::EncodingPanel,
             error_display::ErrorDisplay, generators_panel::GeneratorsPanel, jwt_panel::JwtPanel,
             regex_panel::RegexPanel, top_panel::TopPanel,
         },
@@ -41,6 +41,7 @@ pub enum CentralPanelTab {
     Regex,
     ColorPicker,
     Generators,
+    DateTime,
 }
 
 #[derive(Default)]
@@ -57,6 +58,7 @@ pub struct App {
     pub regex_panel: RegexPanel,
     pub color_picker_panel: ColorPickerPanel,
     pub generators_panel: GeneratorsPanel,
+    pub datetime_panel: DateTimePanel,
     pub error_display: ErrorDisplay,
 }
 
@@ -131,6 +133,7 @@ impl App {
             regex_panel: RegexPanel::new(),
             color_picker_panel: ColorPickerPanel::new(),
             generators_panel: GeneratorsPanel::new(),
+            datetime_panel: DateTimePanel::new(),
             error_display: ErrorDisplay::new(),
         });
 
@@ -233,6 +236,7 @@ impl App {
                 CentralPanelTab::Encoding => self.encoding_panel_ui(ctx, ui),
                 CentralPanelTab::Regex => self.regex_panel_ui(ctx, ui),
                 CentralPanelTab::Generators => self.generators_panel_ui(ctx, ui),
+                CentralPanelTab::DateTime => self.datetime_panel_ui(ctx, ui),
             });
     }
 
@@ -259,6 +263,11 @@ impl App {
     fn generators_panel_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut egui::Ui) {
         self.error_display.render(ctx, ui);
         self.generators_panel.display(ctx, ui);
+    }
+
+    fn datetime_panel_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut egui::Ui) {
+        self.error_display.render(ctx, ui);
+        self.datetime_panel.display(ctx, ui);
     }
 
     fn check_backtick_key_pressed(&mut self, ctx: &mut FrameCtx<'_>) {
