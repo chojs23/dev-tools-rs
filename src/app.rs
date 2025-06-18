@@ -1,8 +1,8 @@
-use std::sync::RwLock;
+use std::sync::{Arc, RwLock};
 
 use eframe::{
-    egui::{self, Margin, Ui, Visuals},
-    CreationContext, Theme,
+    egui::{self, Margin, Theme, Ui, Visuals},
+    CreationContext, IntegrationInfo,
 };
 use once_cell::sync::{Lazy, OnceCell};
 
@@ -134,12 +134,6 @@ impl App {
             error_display: ErrorDisplay::new(),
         });
 
-        let prefer_dark = context
-            .integration_info
-            .system_theme
-            .map(|t| matches!(t, Theme::Dark))
-            .unwrap_or(true);
-
         if let Ok(mut tex_manager) = TEXTURE_MANAGER.write() {
             let mut ctx = FrameCtx {
                 app: &mut app_ctx,
@@ -147,6 +141,8 @@ impl App {
                 tex_manager: &mut tex_manager,
                 frame: None,
             };
+
+            let prefer_dark = ctx.egui.system_theme
 
             ctx.app.load_palettes(context.storage);
 
@@ -160,9 +156,9 @@ impl App {
         let mut fonts = egui::FontDefinitions::default();
         fonts.font_data.insert(
             "Iosevka".to_string(),
-            egui::FontData::from_static(include_bytes!(
+            Arc::new(egui::FontData::from_static(include_bytes!(
                 "../assets/fonts/Iosevka/IosevkaNerdFont-Regular.ttf"
-            )),
+            ))),
         );
         fonts
             .families

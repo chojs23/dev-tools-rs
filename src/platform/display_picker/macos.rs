@@ -5,12 +5,32 @@ use core_graphics::{
     display::{CGDirectDisplayID, CGGetDisplaysWithRect, CGPoint, CGRect, CGSize},
     sys::{CGEventRef, CGEventSourceRef, CGImageRef},
 };
-use objc::{class, msg_send, rc::autoreleasepool, runtime::Object, sel, sel_impl};
+use objc2::{
+    class,
+    encode::{Encode, Encoding},
+    msg_send,
+    rc::autoreleasepool,
+    runtime::AnyObject,
+};
 use std::ptr::null;
 
 use crate::core::color::Rgb;
 
 use super::DisplayPicker;
+
+// Wrapper for CGImageRef to implement Encode trait for objc2
+#[repr(transparent)]
+struct CGImageWrapper(*mut core_graphics::sys::CGImage);
+
+unsafe impl Encode for CGImageWrapper {
+    const ENCODING: Encoding = Encoding::Pointer(&Encoding::Struct("CGImage", &[]));
+}
+
+impl From<CGImageRef> for CGImageWrapper {
+    fn from(image: CGImageRef) -> Self {
+        CGImageWrapper(image)
+    }
+}
 
 #[link(name = "CoreGraphics", kind = "framework")]
 extern "C" {
@@ -24,7 +44,7 @@ extern "C" {
 pub struct MacConn;
 impl MacConn {
     pub fn get_cursor_pos(&self) -> CGPoint {
-        autoreleasepool(|| unsafe {
+        autoreleasepool(|_| unsafe {
             let event = CGEventCreate(null());
             CGEventGetLocation(event)
         })
@@ -41,7 +61,7 @@ impl DisplayPicker for MacConn {
         Ok((pos.x as i32, pos.y as i32))
     }
     fn get_color_under_cursor(&self) -> Result<Color> {
-        autoreleasepool(|| unsafe {
+        autoreleasepool(|_| unsafe {
             let location = self.get_cursor_pos();
 
             let rect = CGRect::new(&location, &CGSize::new(1., 1.));
@@ -55,16 +75,18 @@ impl DisplayPicker for MacConn {
             }
 
             let cls = class!(NSBitmapImageRep);
-            let img: *mut Object = msg_send![cls, alloc];
-            let bitmap: *mut Object = msg_send![img, initWithCGImage: image];
+            let img: *mut AnyObject = msg_send![cls, alloc];
+            let bitmap: *mut AnyObject =
+                msg_send![img, initWithCGImage: CGImageWrapper::from(image)];
             CGImageRelease(image);
-            let color: *mut Object = msg_send![bitmap, colorAtX:0 y:0];
+            let color: *mut AnyObject = msg_send![bitmap, colorAtX: 0, y: 0];
 
-            let r = CGFloat::default();
-            let g = CGFloat::default();
-            let b = CGFloat::default();
-            let a = CGFloat::default();
-            let _: *mut Object = msg_send![color, getRed:&r green:&g blue:&b alpha:&a];
+            let mut r = CGFloat::default();
+            let mut g = CGFloat::default();
+            let mut b = CGFloat::default();
+            let mut a = CGFloat::default();
+            let _: () =
+                msg_send![color, getRed: &mut r, green: &mut g, blue: &mut b, alpha: &mut a];
             Ok(Color::Rgb(Rgb::new(r as f32, g as f32, b as f32)))
         })
     }

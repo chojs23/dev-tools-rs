@@ -62,7 +62,7 @@ impl EncodingProcessor {
                     .join("\r\n")
             }
             EncodingType::Base32 => {
-                base32::encode(Alphabet::RFC4648 { padding: true }, input.as_bytes())
+                base32::encode(Alphabet::Rfc4648 { padding: true }, input.as_bytes())
             }
             EncodingType::UrlEncoding => form_urlencoded::Serializer::new(String::new())
                 .append_pair("", &input)
@@ -83,7 +83,7 @@ impl EncodingProcessor {
                 general_purpose::STANDARD.decode(&clean_input)?
             }
             EncodingType::Base32 => {
-                base32::decode(Alphabet::RFC4648 { padding: true }, &self.input)
+                base32::decode(Alphabet::Rfc4648 { padding: true }, &self.input)
                     .ok_or_else(|| anyhow::anyhow!("Invalid Base32 input"))?
             }
             EncodingType::UrlEncoding => {
