@@ -2,7 +2,7 @@ use super::slider_1d::NUM_OF_VERTICES;
 
 use crate::core::color::Color;
 use eframe::egui::{epaint::Mesh, lerp, remap_clamp, Sense, Shape, Stroke, Vec2};
-use eframe::egui::{pos2, Color32, CursorIcon, Response, Ui};
+use eframe::egui::{pos2, Color32, CursorIcon, Response, StrokeKind, Ui};
 use eframe::epaint::CircleShape;
 use std::ops::RangeInclusive;
 
@@ -46,9 +46,10 @@ pub fn color(
             }
         }
     }
-    ui.painter().add(Shape::mesh(mesh)); // fill
+    ui.painter().add(Shape::mesh(mesh));
 
-    ui.painter().rect_stroke(rect, 0.0, visuals.bg_stroke); // outline
+    ui.painter()
+        .rect_stroke(rect, 0.0, visuals.bg_stroke, StrokeKind::Outside);
 
     let x = remap_clamp(*x_value, x_range, rect.left()..=rect.right());
     let y = remap_clamp(*y_value, y_range, rect.bottom()..=rect.top());

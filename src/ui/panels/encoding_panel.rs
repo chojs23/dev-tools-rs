@@ -46,7 +46,7 @@ impl EncodingPanel {
             ui.label("Decoded Input/Output");
             let available_height = ui.available_height() * 0.35;
             ScrollArea::vertical()
-                .id_source("input_text")
+                .id_salt("input_text")
                 .max_height(available_height)
                 .stick_to_bottom(false)
                 .show(ui, |ui| {
@@ -188,7 +188,7 @@ impl EncodingPanel {
             ui.label("Encoded Input/Output");
             let available_height = ui.available_height() * 0.8;
             ScrollArea::vertical()
-                .id_source("output_text")
+                .id_salt("output_text")
                 .max_height(available_height)
                 .stick_to_bottom(false)
                 .show(ui, |ui| {

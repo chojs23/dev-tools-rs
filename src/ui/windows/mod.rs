@@ -1,6 +1,6 @@
 use eframe::{
-    egui::{Frame, Margin, Ui},
-    epaint::{Rounding, Shadow, Stroke},
+    egui::{Color32, Frame, Margin, Ui},
+    epaint::{Shadow, Stroke},
 };
 
 use super::components::colors::{
@@ -19,12 +19,27 @@ pub fn default_frame(is_dark_mode: bool) -> Frame {
         } else {
             *L_BG_3_TRANSPARENT
         },
-        inner_margin: Margin::symmetric(15., 15.),
-        rounding: Rounding::same(5.),
+        inner_margin: Margin::symmetric(15, 15),
+        outer_margin: Margin {
+            left: WINDOW_X_OFFSET as i8,
+            top: WINDOW_Y_OFFSET as i8,
+            right: 0,
+            bottom: 0,
+        },
         shadow: if is_dark_mode {
-            Shadow::big_dark()
+            Shadow {
+                offset: [0, 0],
+                blur: 10,
+                spread: 0,
+                color: Color32::from_black_alpha(96),
+            }
         } else {
-            Shadow::big_light()
+            Shadow {
+                offset: [0, 0],
+                blur: 10,
+                spread: 0,
+                color: Color32::from_black_alpha(20),
+            }
         },
         stroke: if is_dark_mode {
             Stroke::new(2., *D_BG_00)

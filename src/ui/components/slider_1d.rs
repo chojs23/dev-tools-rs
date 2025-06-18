@@ -1,6 +1,6 @@
 use crate::core::color::Color;
 use eframe::egui::{epaint::Mesh, lerp, remap_clamp, Shape, Stroke};
-use eframe::egui::{pos2, vec2, Color32, CursorIcon, Response, Sense, Ui};
+use eframe::egui::{pos2, vec2, Color32, CursorIcon, Response, Sense, StrokeKind, Ui};
 use std::ops::{Neg, RangeInclusive};
 
 /// Number of vertices per dimension in the color sliders.
@@ -52,7 +52,8 @@ pub fn color(
         ui.painter().add(Shape::mesh(mesh));
     }
 
-    ui.painter().rect_stroke(rect, 0.0, visuals.bg_stroke); // outline
+    ui.painter()
+        .rect_stroke(rect, 0.0, visuals.bg_stroke, StrokeKind::Outside);
 
     {
         let x = *value;
@@ -65,7 +66,6 @@ pub fn color(
         let x = rect.left() + (x / range_end) * width;
         let r = rect.height() / 4.0;
 
-        // Show where the slider is at:
         ui.painter().add(Shape::convex_polygon(
             vec![
                 pos2(x - r, rect.bottom()),

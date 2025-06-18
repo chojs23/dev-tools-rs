@@ -1,4 +1,6 @@
-use eframe::egui::{show_tooltip_text, Color32, CursorIcon, Id, ScrollArea, Sense, Stroke, Ui};
+use eframe::egui::{
+    show_tooltip_text, Color32, CursorIcon, Id, ScrollArea, Sense, Stroke, StrokeKind, Ui,
+};
 
 use crate::{
     app::{ADD_DESCRIPTION, CURRENT_COLOR_BOX_SIZE},
@@ -29,7 +31,7 @@ impl UiPanel for ColorPickerPanel {
         ui.add_space(SPACE);
 
         ScrollArea::vertical()
-            .id_source("picker scroll")
+            .id_salt("picker scroll")
             .show(ui, |ui| {
                 // Display color picking history
                 self.render_color_picking_history(ctx, ui);
@@ -135,7 +137,12 @@ impl ColorPickerPanel {
                         let color_rect = ui.allocate_response([30.0, 30.0].into(), Sense::click());
                         let painter = ui.painter();
                         painter.rect_filled(color_rect.rect, 2.0, color.color32());
-                        painter.rect_stroke(color_rect.rect, 2.0, Stroke::new(1.0, Color32::BLACK));
+                        painter.rect_stroke(
+                            color_rect.rect,
+                            2.0,
+                            Stroke::new(1.0, Color32::BLACK),
+                            StrokeKind::Middle,
+                        );
 
                         if color_rect.clicked() {
                             ctx.app.picker.current_color = *color;
@@ -144,6 +151,7 @@ impl ColorPickerPanel {
                         if color_rect.hovered() {
                             show_tooltip_text(
                                 ui.ctx(),
+                                ui.layer_id(),
                                 Id::new(format!("history_{}", index + 1)),
                                 format!("#{}: {}", index + 1, color_display),
                             );

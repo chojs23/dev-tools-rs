@@ -48,12 +48,12 @@ impl JwtPanel {
 
     fn render_encoded_section(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
         Resize::default()
-            .id_source("jwt_encoded_container")
+            .id_salt("jwt_encoded_container")
             .show(ui, |ui| {
                 ui.label("Encoded input/output");
                 ui.add_space(HALF_SPACE);
                 ScrollArea::vertical()
-                    .id_source("jwt_encoded")
+                    .id_salt("jwt_encoded")
                     .stick_to_bottom(false)
                     .drag_to_scroll(false)
                     .show(ui, |ui| {
@@ -189,12 +189,12 @@ impl JwtPanel {
 
     fn render_decoded_section(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
         Resize::default()
-            .id_source("jwt_decoded_container")
+            .id_salt("jwt_decoded_container")
             .show(ui, |ui| {
                 ui.label("Decoded input/output");
                 ui.add_space(HALF_SPACE);
                 ScrollArea::vertical()
-                    .id_source("jwt_decoded")
+                    .id_salt("jwt_decoded")
                     .stick_to_bottom(false)
                     .drag_to_scroll(false)
                     .show(ui, |ui| {
@@ -259,7 +259,7 @@ impl JwtPanel {
             ui.label("Public Key");
             let scroll_height = ui.available_height() - 30.0;
             ScrollArea::vertical()
-                .id_source("public_key")
+                .id_salt("public_key")
                 .max_height(scroll_height)
                 .stick_to_bottom(false)
                 .show(ui, |ui| {
@@ -285,7 +285,7 @@ impl JwtPanel {
             ui.label("Private Key");
             let scroll_height = ui.available_height() - 30.0;
             ScrollArea::vertical()
-                .id_source("private_key")
+                .id_salt("private_key")
                 .max_height(scroll_height)
                 .stick_to_bottom(false)
                 .show(ui, |ui| {

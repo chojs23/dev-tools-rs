@@ -246,7 +246,7 @@ impl UiPanel for GeneratorsPanel {
                                 let button_response = ui.add(
                                     eframe::egui::Button::new(*output)
                                         .min_size([output.len() as f32 * 2.0, 30.0].into())
-                                        .wrap(false),
+                                        .wrap(),
                                 );
 
                                 if button_response.clicked() {

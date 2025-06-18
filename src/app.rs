@@ -2,7 +2,7 @@ use std::sync::{Arc, RwLock};
 
 use eframe::{
     egui::{self, Margin, Theme, Ui, Visuals},
-    CreationContext, IntegrationInfo,
+    CreationContext,
 };
 use once_cell::sync::{Lazy, OnceCell};
 
@@ -142,15 +142,19 @@ impl App {
                 frame: None,
             };
 
-            let prefer_dark = ctx.egui.system_theme
+            match context.egui_ctx.system_theme() {
+                Some(Theme::Dark) => {
+                    ctx.set_dark_theme();
+                }
+                Some(Theme::Light) => {
+                    ctx.set_light_theme();
+                }
+                _ => {
+                    ctx.set_dark_theme();
+                }
+            }
 
             ctx.app.load_palettes(context.storage);
-
-            if prefer_dark {
-                ctx.set_dark_theme();
-            } else {
-                ctx.set_light_theme();
-            }
         }
 
         let mut fonts = egui::FontDefinitions::default();
@@ -194,7 +198,7 @@ impl App {
             } else {
                 *L_BG_0
             },
-            inner_margin: Margin::symmetric(15., 10.),
+            inner_margin: Margin::symmetric(15, 10),
             ..Default::default()
         };
         egui::TopBottomPanel::top("top panel")
@@ -213,10 +217,10 @@ impl App {
             },
 
             inner_margin: Margin {
-                left: 10.,
-                top: 5.,
-                right: 0.,
-                bottom: 0.,
+                left: 10,
+                top: 5,
+                right: 0,
+                bottom: 0,
             },
             ..Default::default()
         };

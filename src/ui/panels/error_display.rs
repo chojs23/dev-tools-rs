@@ -19,7 +19,7 @@ impl UiComponent for ErrorDisplay {
             if elapsed >= crate::app::ERROR_DISPLAY_DURATION {
                 false
             } else {
-                if let Some(rsp) = egui::Window::new("Error")
+                if let Some(rsp) = egui::Window::new("Error!")
                     .collapsible(true)
                     .id(Id::new(format!("err_ntf_{err_idx}")))
                     .anchor(
@@ -27,10 +27,9 @@ impl UiComponent for ErrorDisplay {
                         (-ctx.app.sidepanel.box_width - 25., -top_padding),
                     )
                     .hscroll(true)
-                    .fixed_size((ctx.app.sidepanel.box_width + 7000., 50.))
+                    .fixed_size((ctx.app.sidepanel.box_width + 200., 50.))
                     .show(ui.ctx(), |ui| {
-                        let label =
-                            Label::new(RichText::new(e.message()).color(Color32::RED)).wrap(true);
+                        let label = Label::new(RichText::new(e.message()).color(Color32::RED));
                         ui.add(label);
                     })
                 {

@@ -44,12 +44,12 @@ impl RegexPanel {
     fn render_pattern_section(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
         //TODO: resizable scroll area looks suck
         Resize::default()
-            .id_source("regex_pattern_container")
+            .id_salt("regex_pattern_container")
             .show(ui, |ui| {
                 ui.label("Regular Expression Pattern");
                 ui.add_space(HALF_SPACE);
                 ScrollArea::vertical()
-                    .id_source("regex_pattern")
+                    .id_salt("regex_pattern")
                     .stick_to_bottom(false)
                     .drag_to_scroll(false)
                     .show(ui, |ui| {
@@ -83,7 +83,7 @@ impl RegexPanel {
             ui.label("Text to Match");
             let available_height = ui.available_height() * 0.4;
             ScrollArea::vertical()
-                .id_source("regex_text")
+                .id_salt("regex_text")
                 .max_height(available_height)
                 .stick_to_bottom(false)
                 .show(ui, |ui| {
@@ -172,7 +172,7 @@ impl RegexPanel {
         //TODO: resizable
 
         ScrollArea::vertical()
-            .id_source("regex_results_container")
+            .id_salt("regex_results_container")
             .stick_to_bottom(false)
             .show(ui, |ui| {
                 ui.set_min_width(400.0);
