@@ -1,7 +1,27 @@
-use anyhow::Error;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone, Utc};
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use std::sync::{Arc, RwLock};
+use std::thread;
+use std::time::Duration;
+
+// Global shared timestamp cache for real-time updates
+static TIMESTAMP_CACHE: Lazy<Arc<RwLock<i64>>> = Lazy::new(|| {
+    let cache = Arc::new(RwLock::new(Utc::now().timestamp()));
+    let cache_clone = Arc::clone(&cache);
+
+    // Start background thread for real-time updates
+    thread::spawn(move || loop {
+        thread::sleep(Duration::from_millis(50));
+        let now = Utc::now().timestamp();
+        if let Ok(mut timestamp) = cache_clone.write() {
+            *timestamp = now;
+        }
+    });
+
+    cache
+});
 
 static COMMON_FORMATS: [&str; 9] = [
     "%Y-%m-%d %H:%M:%S",
@@ -101,7 +121,7 @@ impl DateTimeProcessor {
                             let formatted = std::panic::catch_unwind(|| {
                                 dt.format(&self.custom_format).to_string()
                             });
-                            formatted.unwrap_or_else(|_| {
+                            self.formatted_result = formatted.unwrap_or_else(|_| {
                                 self.error_message = "Failed to format current time".to_string();
                                 String::new()
                             });
@@ -166,12 +186,25 @@ impl DateTimeProcessor {
         self.timestamp_result.clear();
     }
 
-    /// Get current timestamp
+    /// Get current timestamp from thread-safe cache
     pub fn get_current_timestamp(&mut self) {
-        let now = Utc::now().timestamp();
+        let now = self.get_cached_timestamp();
         self.current_timestamp = now;
         self.timestamp_input = now.to_string();
         self.timestamp_to_formatted();
+    }
+
+    /// Get current timestamp from thread-safe cache
+    pub fn get_cached_timestamp(&self) -> i64 {
+        TIMESTAMP_CACHE
+            .read()
+            .map(|ts| *ts)
+            .unwrap_or_else(|_| Utc::now().timestamp())
+    }
+
+    /// Update current timestamp from cache (for real-time updates)
+    pub fn update_current_timestamp(&mut self) {
+        self.current_timestamp = self.get_cached_timestamp();
     }
 
     /// Update custom format and reprocess if needed
@@ -221,9 +254,11 @@ impl DateTimeProcessor {
             return Ok(Utc.from_utc_datetime(&naive_dt));
         }
 
-        // Try parsing as local time
-        if let Ok(local_dt) = Local.datetime_from_str(input, format) {
-            return Ok(local_dt.with_timezone(&Utc));
+        // Try parsing as local time with timezone
+        if let Ok(naive_dt) = NaiveDateTime::parse_from_str(input, format) {
+            if let chrono::LocalResult::Single(local_dt) = naive_dt.and_local_timezone(Local) {
+                return Ok(local_dt.with_timezone(&Utc));
+            }
         }
 
         Err("Failed to parse datetime".to_string())

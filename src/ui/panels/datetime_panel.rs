@@ -16,6 +16,10 @@ pub struct DateTimePanel;
 
 impl UiPanel for DateTimePanel {
     fn display(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
+        // Update current timestamp from cache for real-time updates
+        ctx.app.datetime.update_current_timestamp();
+        ctx.egui.request_repaint();
+
         ui.heading("Date and Time Tools");
         ui.add_space(DOUBLE_SPACE);
 

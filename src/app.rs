@@ -12,9 +12,10 @@ use crate::{
     ui::{
         components::{colors::*, *},
         panels::{
-            color_picker_panel::ColorPickerPanel, datetime_panel::DateTimePanel, encoding_panel::EncodingPanel,
-            error_display::ErrorDisplay, generators_panel::GeneratorsPanel, jwt_panel::JwtPanel,
-            regex_panel::RegexPanel, top_panel::TopPanel,
+            color_picker_panel::ColorPickerPanel, datetime_panel::DateTimePanel,
+            encoding_panel::EncodingPanel, error_display::ErrorDisplay,
+            generators_panel::GeneratorsPanel, jwt_panel::JwtPanel, regex_panel::RegexPanel,
+            top_panel::TopPanel,
         },
         traits::{UiComponent, UiPanel},
         windows::settings::SettingsWindow,
@@ -105,6 +106,7 @@ impl eframe::App for App {
                 }
             }
 
+            // Limit frame when out of focus
             #[cfg(not(target_arch = "wasm32"))]
             if !ctx.egui.is_pointer_over_area() {
                 ctx.egui.request_repaint();
@@ -297,9 +299,5 @@ impl App {
         if ctx.egui.input(|i| i.key_pressed(egui::Key::Escape)) {
             ctx.app.color_picking_enabled = false;
         }
-    }
-
-    pub fn encoding_panel(&self) -> &EncodingPanel {
-        &self.encoding_panel
     }
 }
