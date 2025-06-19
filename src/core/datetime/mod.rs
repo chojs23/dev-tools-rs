@@ -1,3 +1,4 @@
+use anyhow::Error;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone, Utc};
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -96,7 +97,14 @@ impl DateTimeProcessor {
                     let format_str = self.selected_format.format_string();
                     match self.selected_format {
                         DateTimeFormat::Custom(_) => {
-                            self.formatted_result = dt.format(&self.custom_format).to_string();
+                            std::panic::set_hook(Box::new(|_| ()));
+                            let formatted = std::panic::catch_unwind(|| {
+                                dt.format(&self.custom_format).to_string()
+                            });
+                            formatted.unwrap_or_else(|_| {
+                                self.error_message = "Failed to format current time".to_string();
+                                String::new()
+                            });
                         }
                         _ => {
                             self.formatted_result = dt.format(&format_str).to_string();
@@ -222,15 +230,20 @@ impl DateTimeProcessor {
     }
 
     /// Format current system time with selected format
-    pub fn format_current_time(&self) -> String {
+    pub fn format_current_time(&mut self) -> String {
         let now = Utc::now();
         let format_str = match self.selected_format {
             DateTimeFormat::Custom(_) => &self.custom_format,
             _ => &self.selected_format.format_string(),
         };
 
-        //TODO: format can panic if the format is invalid
-        now.format(format_str).to_string()
+        ////TODO: format can panic if the format is invalid
+        std::panic::set_hook(Box::new(|_| ()));
+        let formatted = std::panic::catch_unwind(|| now.format(format_str).to_string());
+        formatted.unwrap_or_else(|_| {
+            self.error_message = "Failed to format current time".to_string();
+            String::new()
+        })
     }
 
     /// Get relative time description (e.g., "2 hours ago", "in 3 days")
