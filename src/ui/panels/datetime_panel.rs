@@ -18,7 +18,6 @@ impl UiPanel for DateTimePanel {
     fn display(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
         // Update current timestamp from cache for real-time updates
         ctx.app.datetime.update_current_timestamp();
-        ctx.egui.request_repaint();
 
         ui.heading("Date and Time Tools");
         ui.add_space(DOUBLE_SPACE);
@@ -212,6 +211,7 @@ impl DateTimePanel {
     }
 
     fn render_utilities_section(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
+        ctx.egui.request_repaint();
         ui.vertical(|ui| {
             ui.heading("Utilities");
             ui.add_space(SPACE);
