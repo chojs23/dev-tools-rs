@@ -2,7 +2,7 @@
 
 A **native application** inspired by the [Developer Tools IntelliJ Plugin](https://plugins.jetbrains.com/plugin/21904-developer-tools), built with **Rust** and **egui**.
 
-![til](./blob/master/example.gif)
+![til](./blob/master/preview.png)
 
 ---
 
@@ -63,51 +63,56 @@ Some of these features are work in progress.
 
 - **macOS (ARM64)**: [dev-tools-rs-v0.1.0-macos-arm64.tar.gz](https://github.com/chojs23/dev-tools-rs/releases/download/v0.1.0/dev-tools-rs-v0.1.0-macos-arm64.tar.gz)
 
-> **Note**: Currently only macOS ARM64 binaries are available. Windows and Linux builds will be added in future releases.
+> **Note**: Currently only macOS ARM64 binaries are available. Windows and Linux builds will be added.
 
 ### Build from Source
 
 #### Prerequisites
 
 - **Rust**: Version 1.70.0 or later
-- **Git**: For cloning the repository
 
 #### Installation Steps
 
 1. **Install Rust**
-   
+
    If you don't have Rust installed, install it via [rustup](https://rustup.rs/):
+
    ```bash
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
    source ~/.cargo/env
    ```
 
 2. **Clone the Repository**
+
    ```bash
    git clone https://github.com/chojs23/dev-tools-rs.git
    cd dev-tools-rs
    ```
 
 3. **Build the Application**
-   
+
    For development build:
+
    ```bash
    cargo build
    ```
-   
+
    For optimized release build:
+
    ```bash
    cargo build --release
    ```
 
 4. **Run the Application**
-   
+
    From development build:
+
    ```bash
    cargo run
    ```
-   
+
    From release build:
+
    ```bash
    ./target/release/dev-tools-rs
    ```
@@ -116,45 +121,24 @@ Some of these features are work in progress.
 
 - **macOS**: No additional dependencies required
 - **Linux**: You may need to install development packages:
+
   ```bash
   # Ubuntu/Debian
   sudo apt update
   sudo apt install build-essential pkg-config libfontconfig1-dev
-  
+
   # Fedora/RHEL
   sudo dnf install gcc pkg-config fontconfig-devel
-  
+
   # Arch Linux
   sudo pacman -S base-devel pkg-config fontconfig
   ```
+
 - **Windows**: Make sure you have the Microsoft C++ Build Tools installed
-
-#### Development
-
-For development with hot reload:
-```bash
-cargo run
-```
-
-To run tests:
-```bash
-cargo test
-```
-
-To check code formatting:
-```bash
-cargo fmt --check
-```
-
-To run clippy for linting:
-```bash
-cargo clippy
-```
 
 ## Usage
 
 Launch the app and select the desired tool from the main menu.
-Configure settings and preferences as needed in the Settings section.
 
 ## License
 
