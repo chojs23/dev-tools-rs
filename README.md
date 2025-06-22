@@ -1,4 +1,4 @@
-# Developer Tools App
+# Dev-tools-rs
 
 A **native application** inspired by the [Developer Tools IntelliJ Plugin](https://plugins.jetbrains.com/plugin/21904-developer-tools), built with **Rust** and **egui**.
 
@@ -8,7 +8,7 @@ A **native application** inspired by the [Developer Tools IntelliJ Plugin](https
 
 ## Features
 
-_These features are a work in progress_
+Some of these features are work in progress.
 
 - **Color Picker**  
   Easily pick colors and copy their values.

@@ -7,9 +7,11 @@ mod types;
 mod ui;
 mod utils;
 
-pub use app::App as DevToolsApp;
+pub use app::App as DevToolsRsApp;
 
 use anyhow::{Context, Result};
+
+pub const APP_NAME: &str = "dev-tools-rs";
 
 #[cfg(not(target_arch = "wasm32"))]
 fn save_to_clipboard(text: String) -> Result<()> {

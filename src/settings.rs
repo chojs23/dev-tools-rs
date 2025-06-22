@@ -10,7 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{core::color::*, ui::components::layout::HarmonyLayout};
+use crate::{core::color::*, ui::components::layout::HarmonyLayout, APP_NAME};
 
 pub const DEFAULT_PIXELS_PER_POINT: f32 = 1.0;
 
@@ -24,7 +24,7 @@ pub fn load_global(_storage: Option<&dyn eframe::Storage>) -> Option<Settings> {
         }
     }
     #[cfg(not(target_arch = "wasm32"))]
-    if let Some(config_dir) = Settings::dir("d_tools") {
+    if let Some(config_dir) = Settings::dir(APP_NAME) {
         let path = config_dir.join(Settings::FILE_NAME);
 
         if let Ok(settings) = Settings::load(path) {
@@ -41,7 +41,7 @@ pub fn save_global(settings: &Settings, _storage: &mut dyn Storage) {
         _storage.set_string(Settings::STORAGE_KEY, yaml);
     }
     #[cfg(not(target_arch = "wasm32"))]
-    if let Some(dir) = Settings::dir("d_tools") {
+    if let Some(dir) = Settings::dir(APP_NAME) {
         if !dir.exists() {
             let _ = std::fs::create_dir_all(&dir);
         }
@@ -119,7 +119,7 @@ impl Default for Settings {
 }
 
 impl Settings {
-    pub const STORAGE_KEY: &'static str = "d_tools.saved.settings";
+    pub const STORAGE_KEY: &'static str = "dev-tools-rs.saved.settings";
     pub const FILE_NAME: &'static str = "settings.yaml";
 
     pub fn from_yaml_str(yaml: &str) -> Result<Self> {

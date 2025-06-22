@@ -21,6 +21,7 @@ use crate::{
         render::{TextureAllocator, TextureManager},
         screen_size::ScreenSize,
     },
+    APP_NAME,
 };
 
 #[derive(Clone, Debug)]
@@ -148,7 +149,7 @@ impl AppCtx {
             }
 
             #[cfg(not(target_arch = "wasm32"))]
-            if let Some(path) = Palettes::dir("d_tools") {
+            if let Some(path) = Palettes::dir(APP_NAME) {
                 println!("Loading palettes from: {}", path.display());
                 match Palettes::load(path.join(Palettes::FILE_NAME)) {
                     Ok(palettes) => self.palettes = palettes,
@@ -167,7 +168,7 @@ impl AppCtx {
             }
         }
         #[cfg(not(target_arch = "wasm32"))]
-        if let Some(dir) = Palettes::dir("d_tools") {
+        if let Some(dir) = Palettes::dir(APP_NAME) {
             if !dir.exists() {
                 let _ = std::fs::create_dir_all(&dir);
             }

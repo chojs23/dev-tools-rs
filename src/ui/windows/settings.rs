@@ -13,6 +13,7 @@ use crate::{
         components::{DOUBLE_SPACE, HALF_SPACE, SPACE},
         traits::UiWindow,
     },
+    APP_NAME,
 };
 
 use super::{WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
@@ -102,7 +103,7 @@ impl SettingsWindow {
             .on_hover_cursor(CursorIcon::PointingHand)
             .clicked()
         {
-            if let Some(dir) = Settings::dir("d_tools") {
+            if let Some(dir) = Settings::dir(APP_NAME) {
                 if !dir.exists() {
                     if let Err(e) = fs::create_dir_all(&dir) {
                         self.set_error(e);

@@ -4,8 +4,8 @@ fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions::default();
 
     eframe::run_native(
-        "Dev tools",
+        "Dev-tools-rs",
         options,
-        Box::new(|ctx| Ok(dev_tools::DevToolsApp::init(ctx))),
+        Box::new(|ctx| Ok(dev_tools_rs::DevToolsRsApp::init(ctx))),
     )
 }
