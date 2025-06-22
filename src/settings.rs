@@ -79,49 +79,6 @@ fn default_color_size() -> f32 {
     DEFAULT_COLOR_SIZE
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
-pub struct ColorSpaceSettings {
-    #[serde(default = "enabled")]
-    #[serde(skip_serializing_if = "is_true")]
-    pub rgb: bool,
-    #[serde(default = "enabled")]
-    #[serde(skip_serializing_if = "is_true")]
-    pub cmyk: bool,
-    #[serde(default = "enabled")]
-    #[serde(skip_serializing_if = "is_true")]
-    pub hsv: bool,
-    #[serde(default = "enabled")]
-    #[serde(skip_serializing_if = "is_true")]
-    pub hsl: bool,
-    #[serde(default)]
-    #[serde(skip_serializing_if = "is_false")]
-    pub luv: bool,
-    #[serde(default)]
-    #[serde(skip_serializing_if = "is_false")]
-    pub lch_uv: bool,
-    #[serde(default)]
-    #[serde(skip_serializing_if = "is_false")]
-    pub lab: bool,
-    #[serde(default)]
-    #[serde(skip_serializing_if = "is_false")]
-    pub lch_ab: bool,
-}
-
-impl Default for ColorSpaceSettings {
-    fn default() -> Self {
-        Self {
-            rgb: true,
-            cmyk: true,
-            hsv: true,
-            hsl: true,
-            luv: false,
-            lch_uv: false,
-            lab: false,
-            lch_ab: false,
-        }
-    }
-}
-
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Settings {
     #[serde(default)]
@@ -133,17 +90,6 @@ pub struct Settings {
     #[serde(default)]
     #[serde(skip_serializing_if = "HashMap::is_empty")]
     pub saved_color_formats: HashMap<String, String>,
-    #[serde(default)]
-    pub color_spaces: ColorSpaceSettings,
-    #[serde(default)]
-    pub rgb_working_space: RgbWorkingSpace,
-    #[serde(default)]
-    pub chromatic_adaptation_method: ChromaticAdaptationMethod,
-    #[serde(default)]
-    pub illuminant: Illuminant,
-    // #[serde(default)]
-    // #[serde(skip_serializing_if = "HashMap::is_empty")]
-    // pub saved_palette_formats: HashMap<String, CustomPaletteFormat>,
     #[serde(default = "enabled")]
     #[serde(skip_serializing_if = "is_true")]
     pub is_dark_mode: bool,
@@ -174,10 +120,6 @@ impl Default for Settings {
             color_display_format: ColorDisplayFmtEnum::default(),
             color_clipboard_format: None,
             saved_color_formats: HashMap::default(),
-            color_spaces: ColorSpaceSettings::default(),
-            rgb_working_space: ws,
-            chromatic_adaptation_method: ChromaticAdaptationMethod::default(),
-            illuminant: ws.reference_illuminant(),
             cache_colors: true,
             auto_copy_picked_color: false,
             pixels_per_point: DEFAULT_PIXELS_PER_POINT,
@@ -232,8 +174,6 @@ pub enum ColorDisplayFmtEnum {
     CssRgb,
     #[serde(rename = "css-hsl")]
     CssHsl,
-    #[serde(rename = "custom")]
-    Custom(String),
 }
 
 impl Default for ColorDisplayFmtEnum {
@@ -250,13 +190,12 @@ impl AsRef<str> for ColorDisplayFmtEnum {
             HexUppercase => "hex uppercase",
             CssRgb => "css rgb",
             CssHsl => "css hsl",
-            Custom(name) => name,
         }
     }
 }
 
 impl ColorDisplayFmtEnum {
-    pub fn default_display_format() -> ColorFormat<'static> {
+    pub fn default_display_format() -> ColorFormat {
         ColorFormat::Hex
     }
 }

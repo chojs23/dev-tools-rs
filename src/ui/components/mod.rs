@@ -138,16 +138,10 @@ pub fn dark_visuals() -> Visuals {
     }
 }
 
-pub fn color_tooltip(
-    color: &Color,
-    display_format: ColorFormat,
-    ws: RgbWorkingSpace,
-    illuminant: Illuminant,
-    text: Option<&str>,
-) -> String {
+pub fn color_tooltip(color: &Color, display_format: ColorFormat, text: Option<&str>) -> String {
     format!(
         "{}\n\n{}",
-        color.display(display_format, ws, illuminant),
+        color.display(display_format),
         text.unwrap_or_default()
     )
 }

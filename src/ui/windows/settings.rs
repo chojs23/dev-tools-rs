@@ -315,11 +315,7 @@ impl SettingsWindow {
         ComboBox::from_label("Color display format")
             .selected_text(app_ctx.settings.color_display_format.as_ref())
             .show_ui(ui, |ui| {
-                color_format_selection_fill(
-                    &mut app_ctx.settings.color_display_format,
-                    app_ctx.settings.saved_color_formats.keys(),
-                    ui,
-                );
+                color_format_selection_fill(&mut app_ctx.settings.color_display_format, ui);
             });
         ui.add_space(HALF_SPACE);
         ComboBox::from_label("Color clipboard format")
@@ -337,11 +333,7 @@ impl SettingsWindow {
                     None,
                     "Same as display",
                 );
-                color_format_selection_fill(
-                    &mut app_ctx.settings.color_clipboard_format,
-                    app_ctx.settings.saved_color_formats.keys(),
-                    ui,
-                );
+                color_format_selection_fill(&mut app_ctx.settings.color_clipboard_format, ui);
             });
         // ComboBox::from_label("Palette clipboard format")
         //     .selected_text(app_ctx.settings.palette_clipboard_format.as_ref())
@@ -397,7 +389,6 @@ impl SettingsWindow {
 /// Used to fill both the display and clipboard format selections.
 fn color_format_selection_fill<'a, T: From<ColorDisplayFmtEnum> + PartialEq>(
     fmt_ref: &mut T,
-    customs: impl IntoIterator<Item = &'a String>,
     ui: &mut Ui,
 ) {
     ui.selectable_value(
@@ -420,11 +411,4 @@ fn color_format_selection_fill<'a, T: From<ColorDisplayFmtEnum> + PartialEq>(
         ColorDisplayFmtEnum::CssHsl.into(),
         ColorDisplayFmtEnum::CssHsl.as_ref(),
     );
-    for custom in customs {
-        ui.selectable_value(
-            fmt_ref,
-            ColorDisplayFmtEnum::Custom(custom.clone()).into(),
-            format!("*{}", custom),
-        );
-    }
 }

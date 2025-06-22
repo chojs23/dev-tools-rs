@@ -49,13 +49,7 @@ impl ColorBox {
         let color = self.color();
         let display_str = ctx.app.display_color(&color);
         let format = ctx.app.display_format();
-        let on_hover = color_tooltip(
-            &color,
-            format,
-            ctx.app.settings.rgb_working_space,
-            ctx.app.settings.illuminant,
-            self.hover_help(),
-        );
+        let on_hover = color_tooltip(&color, format, self.hover_help());
         let tex_allocator = &mut ctx.tex_allocator();
         let resp = render_color(
             ui,

@@ -52,16 +52,10 @@ pub struct AppCtx {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SidePanelData {
-    /// Is the side panel visible
     pub show: bool,
-    /// If true palette name is currently being edited
     pub edit_palette_name: bool,
-    /// When triggering palette name edit this is used to
-    /// switch focus to the textedit
     pub trigger_edit_focus: bool,
-    /// Width of the button toolbar on the sidebar
     pub box_width: f32,
-    /// Size of the whole Sidebar response
     pub response_size: egui::Vec2,
 }
 
@@ -116,24 +110,12 @@ impl AppCtx {
             ColorDisplayFmtEnum::CssHsl => ColorFormat::CssHsl {
                 degree_symbol: true,
             },
-            ColorDisplayFmtEnum::Custom(ref name) => {
-                if self.settings.saved_color_formats.get(name).is_some() {
-                    ColorFormat::Custom(&self.settings.saved_color_formats[name])
-                } else {
-                    append_global_error(format!("Custom color format `{name}` not found"));
-                    ColorDisplayFmtEnum::default_display_format()
-                }
-            }
         }
     }
 
     /// Format a color as a string using display color format from settings
     pub fn display_color(&self, color: &Color) -> String {
-        color.display(
-            self.display_format(),
-            self.settings.rgb_working_space,
-            self.settings.illuminant,
-        )
+        color.display(self.display_format())
     }
 
     /// Format a color as a string using clipboard color format from settings
@@ -150,20 +132,8 @@ impl AppCtx {
             ColorDisplayFmtEnum::CssHsl => ColorFormat::CssHsl {
                 degree_symbol: false,
             },
-            ColorDisplayFmtEnum::Custom(name) => {
-                if self.settings.saved_color_formats.get(name).is_some() {
-                    ColorFormat::Custom(&self.settings.saved_color_formats[name])
-                } else {
-                    append_global_error(format!("Custom color format `{name}` not found"));
-                    ColorDisplayFmtEnum::default_display_format()
-                }
-            }
         };
-        color.display(
-            format,
-            self.settings.rgb_working_space,
-            self.settings.illuminant,
-        )
+        color.display(format)
     }
 
     /// Load palettes from appropriate location based on the target arch

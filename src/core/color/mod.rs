@@ -113,7 +113,7 @@ impl Default for ColorHarmony {
 //################################################################################
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
-pub enum ColorFormat<'fmt> {
+pub enum ColorFormat {
     #[serde(rename = "hex")]
     Hex,
     #[serde(rename = "hex-uppercase")]
@@ -121,13 +121,10 @@ pub enum ColorFormat<'fmt> {
     #[serde(rename = "css-rgb")]
     CssRgb,
     #[serde(rename = "css-hsl")]
-    CssHsl {
-        degree_symbol: bool,
-    },
-    Custom(&'fmt str),
+    CssHsl { degree_symbol: bool },
 }
 
-impl<'fmt> ColorFormat<'fmt> {
+impl<'fmt> ColorFormat {
     pub fn no_degree(self) -> Self {
         use ColorFormat::*;
         match self {
@@ -221,24 +218,12 @@ impl Color {
         )
     }
 
-    pub fn display(
-        &self,
-        format: ColorFormat,
-        ws: RgbWorkingSpace,
-        illuminant: Illuminant,
-    ) -> String {
+    pub fn display(&self, format: ColorFormat) -> String {
         match format {
             ColorFormat::Hex => self.as_hex(),
             ColorFormat::HexUpercase => self.as_hex().to_uppercase(),
             ColorFormat::CssRgb => self.as_css_rgb(),
             ColorFormat::CssHsl { degree_symbol } => self.as_css_hsl(degree_symbol),
-            ColorFormat::Custom(fmt) => {
-                if let Ok(fmt) = CustomColorFormat::parse(fmt) {
-                    fmt.format_color(self, ws, illuminant).unwrap_or_default()
-                } else {
-                    self.as_hex()
-                }
-            }
         }
     }
 
