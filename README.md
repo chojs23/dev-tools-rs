@@ -57,7 +57,12 @@ Some of these features are work in progress.
 
 ### Download the latest release
 
-will be added
+**[Download v0.1.0](https://github.com/chojs23/dev-tools-rs/releases/tag/v0.1.0)**
+
+#### Available Downloads:
+- **macOS (ARM64)**: [dev-tools-rs-v0.1.0-macos-arm64.tar.gz](https://github.com/chojs23/dev-tools-rs/releases/download/v0.1.0/dev-tools-rs-v0.1.0-macos-arm64.tar.gz)
+
+> **Note**: Currently only macOS ARM64 binaries are available. Windows and Linux builds will be added in future releases.
 
 ### build from source
 
