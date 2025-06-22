@@ -6,14 +6,12 @@ use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
 
-// Global shared timestamp cache for real-time updates
 static TIMESTAMP_CACHE: Lazy<Arc<RwLock<i64>>> = Lazy::new(|| {
     let cache = Arc::new(RwLock::new(Utc::now().timestamp()));
     let cache_clone = Arc::clone(&cache);
 
-    // Start background thread for real-time updates
     thread::spawn(move || loop {
-        thread::sleep(Duration::from_millis(50));
+        thread::sleep(Duration::from_millis(100));
         let now = Utc::now().timestamp();
         if let Ok(mut timestamp) = cache_clone.write() {
             *timestamp = now;
@@ -202,12 +200,10 @@ impl DateTimeProcessor {
             .unwrap_or_else(|_| Utc::now().timestamp())
     }
 
-    /// Update current timestamp from cache (for real-time updates)
     pub fn update_current_timestamp(&mut self) {
         self.current_timestamp = self.get_cached_timestamp();
     }
 
-    /// Update custom format and reprocess if needed
     pub fn update_custom_format(&mut self, format: String) {
         self.custom_format = format;
         if matches!(self.selected_format, DateTimeFormat::Custom(_)) {
@@ -218,7 +214,6 @@ impl DateTimeProcessor {
         }
     }
 
-    /// Update selected format and reprocess if needed
     pub fn update_selected_format(&mut self, format: DateTimeFormat) {
         self.selected_format = format;
         if !self.timestamp_input.is_empty() {
@@ -249,12 +244,10 @@ impl DateTimeProcessor {
         input: &str,
         format: &str,
     ) -> Result<DateTime<Utc>, String> {
-        // Try parsing as UTC first
         if let Ok(naive_dt) = NaiveDateTime::parse_from_str(input, format) {
             return Ok(Utc.from_utc_datetime(&naive_dt));
         }
 
-        // Try parsing as local time with timezone
         if let Ok(naive_dt) = NaiveDateTime::parse_from_str(input, format) {
             if let chrono::LocalResult::Single(local_dt) = naive_dt.and_local_timezone(Local) {
                 return Ok(local_dt.with_timezone(&Utc));
@@ -264,7 +257,6 @@ impl DateTimeProcessor {
         Err("Failed to parse datetime".to_string())
     }
 
-    /// Format current system time with selected format
     pub fn format_current_time(&mut self) -> String {
         let now = Utc::now();
         let format_str = match self.selected_format {
@@ -281,7 +273,6 @@ impl DateTimeProcessor {
         })
     }
 
-    /// Get relative time description (e.g., "2 hours ago", "in 3 days")
     pub fn get_relative_time(&self, timestamp: i64) -> String {
         match self.create_datetime_from_timestamp(timestamp) {
             Ok(dt) => {

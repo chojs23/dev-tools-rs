@@ -1,3 +1,5 @@
+use std::thread;
+
 use chrono::Datelike;
 use eframe::egui::{CursorIcon, Resize, ScrollArea, Ui};
 use eframe::epaint::Color32;

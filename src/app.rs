@@ -109,8 +109,6 @@ impl eframe::App for App {
             // Limit frame when out of focus
             #[cfg(not(target_arch = "wasm32"))]
             if !ctx.egui.is_pointer_over_area() {
-                ctx.egui.request_repaint();
-
                 if ctx.app.zoom_window_dragged {
                     return;
                 }
