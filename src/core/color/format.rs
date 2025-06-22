@@ -1,7 +1,4 @@
-use super::{
-    palette::Palette, xyY, CIEColor, Cmyk, Color, Hsl, Hsv, Illuminant, Lab, LchAB, LchUV, Luv,
-    RgbWorkingSpace, Xyz,
-};
+use super::{palette::Palette, Cmyk, Color, Hsl, Hsv};
 
 use anyhow::{Error, Result};
 use nom::{
@@ -25,16 +22,11 @@ pub struct CustomPaletteFormat {
 }
 
 impl CustomPaletteFormat {
-    pub fn format_palette(
-        &self,
-        palette: &Palette,
-        ws: RgbWorkingSpace,
-        illuminant: Illuminant,
-    ) -> Result<String> {
+    pub fn format_palette(&self, palette: &Palette) -> Result<String> {
         let mut s = self.prefix.clone();
         let entry_format = CustomColorFormat::parse(&self.entry_format)?;
         for entry in palette.iter() {
-            s.push_str(&entry_format.format_color(entry, ws, illuminant)?);
+            s.push_str(&entry_format.format_color(entry)?);
         }
         s.push_str(&self.suffix);
         Ok(s)
@@ -52,24 +44,13 @@ impl<'a> CustomColorFormat<'a> {
         }
     }
 
-    pub fn format_color(
-        &self,
-        color: &Color,
-        ws: RgbWorkingSpace,
-        illuminant: Illuminant,
-    ) -> Result<String> {
+    pub fn format_color(&self, color: &Color) -> Result<String> {
         use ColorSymbol::*;
 
         let rgb = color.rgb();
         let cmyk = Cmyk::from(rgb);
         let hsl = Hsl::from(rgb);
         let hsv = Hsv::from(rgb);
-        let xyz = Xyz::from_rgb(rgb, ws);
-        let xyy = xyY::from(xyz);
-        let lab = Lab::from_xyz(xyz, illuminant);
-        let luv = Luv::from(xyz);
-        let lch_ab = LchAB::from(lab);
-        let lch_uv = LchUV::from(luv);
 
         let mut s = String::new();
 
@@ -117,29 +98,6 @@ impl<'a> CustomColorFormat<'a> {
                             HSVSaturation100 => hsv.s_scaled(),
                             HSVValue100 => hsv.v_scaled(),
 
-                            LabL => lab.l(),
-                            LabA => lab.a(),
-                            LabB => lab.b(),
-
-                            LCHabL => lch_ab.l(),
-                            LCHabC => lch_ab.c(),
-                            LCHabH => lch_ab.h(),
-
-                            LuvL => luv.l(),
-                            LuvU => luv.u(),
-                            LuvV => luv.v(),
-
-                            LCHuvL => lch_uv.l(),
-                            LCHuvC => lch_uv.c(),
-                            LCHuvH => lch_uv.h(),
-
-                            xyYx => xyy.x(),
-                            xyYy => xyy.y(),
-                            xyYY => xyy.yy(),
-
-                            XYZx => xyz.x(),
-                            XYZy => xyz.y(),
-                            XYZz => xyz.z(),
                             _ => unreachable!(),
                         };
 
@@ -502,10 +460,7 @@ fn parse_color_format(i: &str) -> IResult<&str, CustomColorFormat, ColorParseErr
 mod tests {
     use crate::core::color::Rgb;
 
-    use super::{
-        Color, ColorField, ColorSymbol, CustomColorFormat, DigitFormat, FormatToken, Illuminant,
-        RgbWorkingSpace,
-    };
+    use super::{Color, ColorField, ColorSymbol, CustomColorFormat, DigitFormat, FormatToken};
     macro_rules! field {
         ($sym:tt) => {
             FormatToken::Color(ColorField {
@@ -539,9 +494,7 @@ mod tests {
             ($fmt:literal => $want:literal, $color:expr) => {
                 let color_format = CustomColorFormat::parse($fmt).unwrap();
                 let color = $color;
-                let formatted = color_format
-                    .format_color(&color, RgbWorkingSpace::SRGB, Illuminant::D65)
-                    .unwrap();
+                let formatted = color_format.format_color(&color).unwrap();
                 assert_eq!(formatted, $want);
             };
         }

@@ -61,14 +61,6 @@ fn is_true(it: &bool) -> bool {
     *it
 }
 
-fn is_default_harmony_layout(it: &HarmonyLayout) -> bool {
-    *it == HarmonyLayout::default()
-}
-
-fn is_default_harmony(it: &ColorHarmony) -> bool {
-    *it == ColorHarmony::default()
-}
-
 fn is_default_color_size(it: &f32) -> bool {
     *it == DEFAULT_COLOR_SIZE
 }
@@ -114,7 +106,6 @@ fn is_default_pixels_per_point(ppp: &f32) -> bool {
 
 impl Default for Settings {
     fn default() -> Self {
-        let ws = RgbWorkingSpace::default();
         Self {
             is_dark_mode: true,
             color_display_format: ColorDisplayFmtEnum::default(),
@@ -164,9 +155,10 @@ impl Settings {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize, Default)]
 pub enum ColorDisplayFmtEnum {
     #[serde(rename = "hex")]
+    #[default]
     Hex,
     #[serde(rename = "hex-uppercase")]
     HexUppercase,
@@ -174,12 +166,6 @@ pub enum ColorDisplayFmtEnum {
     CssRgb,
     #[serde(rename = "css-hsl")]
     CssHsl,
-}
-
-impl Default for ColorDisplayFmtEnum {
-    fn default() -> Self {
-        ColorDisplayFmtEnum::Hex
-    }
 }
 
 impl AsRef<str> for ColorDisplayFmtEnum {
@@ -199,63 +185,3 @@ impl ColorDisplayFmtEnum {
         ColorFormat::Hex
     }
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use crate::{
-//         color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace},
-//         math::eq_f32,
-//         settings::{Settings, DEFAULT_COLOR_SIZE},
-//         ui::layout::HarmonyLayout,
-//     };
-//     use std::fs;
-//
-//     #[test]
-//     fn loads_settings() {
-//         let tmp = tempfile::TempDir::new().unwrap();
-//         let settings_str = r#"color_display_format: !custom rgb
-// color_clipboard_format: null
-// palette_clipboard_format: HexList
-// saved_color_formats:
-//   rgb: '{r} {g} {b}'
-// color_spaces:
-//   hsv: false
-//   luv: true
-//   lab: true
-// rgb_working_space: Adobe
-// chromatic_adaptation_method: VonKries
-// illuminant: D50
-// harmony_layout: gradient
-// "#;
-//         let path = tmp.path().join("settings.yaml");
-//         fs::write(&path, settings_str).unwrap();
-//
-//         let settings = Settings::load(&path).unwrap();
-//         assert_eq!(settings.illuminant, Illuminant::D50);
-//         assert_eq!(settings.rgb_working_space, RgbWorkingSpace::Adobe);
-//         assert_eq!(
-//             settings.chromatic_adaptation_method,
-//             ChromaticAdaptationMethod::VonKries
-//         );
-//
-//         assert!(settings.color_spaces.rgb);
-//         assert!(settings.color_spaces.cmyk);
-//         assert!(settings.color_spaces.hsl);
-//         assert!(settings.color_spaces.luv);
-//         assert!(settings.color_spaces.lab);
-//         assert!(!settings.color_spaces.hsv);
-//         assert!(!settings.color_spaces.lch_uv);
-//         assert!(!settings.color_spaces.lch_ab);
-//         assert!(settings.cache_colors);
-//
-//         assert_eq!(settings.harmony, ColorHarmony::default());
-//         assert_eq!(settings.harmony_layout, HarmonyLayout::Gradient);
-//         assert!(eq_f32(settings.harmony_color_size, DEFAULT_COLOR_SIZE));
-//         assert!(!settings.harmony_display_color_label);
-//
-//         let path = tmp.path().join("new_settings.yaml");
-//         settings.save(&path).unwrap();
-//
-//         assert_eq!(fs::read_to_string(&path).unwrap(), settings_str);
-//     }
-// }

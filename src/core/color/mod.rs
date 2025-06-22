@@ -1,36 +1,16 @@
-mod chromatic_adaptation;
 mod cmyk;
 mod format;
 pub mod gradient;
 mod hsl;
 mod hsv;
-mod illuminant;
-mod lab;
-mod lch_ab;
-mod lch_uv;
-mod luv;
 mod palette;
 pub mod palettes;
 mod rgb;
-mod working_space;
-mod xyy;
-mod xyz;
 
-use format::CustomColorFormat;
-
-pub use chromatic_adaptation::ChromaticAdaptationMethod;
 pub use cmyk::Cmyk;
 pub use hsl::Hsl;
 pub use hsv::Hsv;
-pub use illuminant::Illuminant;
-pub use lab::Lab;
-pub use lch_ab::LchAB;
-pub use lch_uv::LchUV;
-pub use luv::Luv;
 pub use rgb::Rgb;
-pub use working_space::RgbWorkingSpace;
-pub use xyy::xyY;
-pub use xyz::Xyz;
 
 use eframe::{
     egui::{Color32, Rgba},
@@ -75,43 +55,6 @@ pub fn parse_hex(color: &str) -> Option<(u8, u8, u8)> {
     ))
 }
 
-//################################################################################
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(rename_all = "lowercase")]
-pub enum ColorHarmony {
-    Complementary,
-    Triadic,
-    Tetradic,
-    Analogous,
-    #[serde(rename = "split-complementary")]
-    SplitComplementary,
-    Square,
-    Monochromatic,
-}
-
-impl AsRef<str> for ColorHarmony {
-    fn as_ref(&self) -> &str {
-        match &self {
-            ColorHarmony::Complementary => "complementary",
-            ColorHarmony::Triadic => "triadic",
-            ColorHarmony::Tetradic => "tetradic",
-            ColorHarmony::Analogous => "analogous",
-            ColorHarmony::SplitComplementary => "split complementary",
-            ColorHarmony::Square => "square",
-            ColorHarmony::Monochromatic => "monochromatic",
-        }
-    }
-}
-
-impl Default for ColorHarmony {
-    fn default() -> Self {
-        ColorHarmony::Complementary
-    }
-}
-
-//################################################################################
-
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub enum ColorFormat {
     #[serde(rename = "hex")]
@@ -124,7 +67,7 @@ pub enum ColorFormat {
     CssHsl { degree_symbol: bool },
 }
 
-impl<'fmt> ColorFormat {
+impl ColorFormat {
     pub fn no_degree(self) -> Self {
         use ColorFormat::*;
         match self {
@@ -138,11 +81,6 @@ impl<'fmt> ColorFormat {
 
 //################################################################################
 
-pub trait CIEColor {
-    fn to_rgb(self, ws: RgbWorkingSpace) -> Rgb;
-    fn from_rgb(rgb: Rgb, ws: RgbWorkingSpace) -> Self;
-}
-
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub enum Color {
@@ -150,12 +88,6 @@ pub enum Color {
     Cmyk(Cmyk),
     Hsv(Hsv),
     Hsl(Hsl),
-    Xyz(Xyz, RgbWorkingSpace),
-    xyY(xyY, RgbWorkingSpace),
-    Luv(Luv, RgbWorkingSpace),
-    LchUV(LchUV, RgbWorkingSpace),
-    Lab(Lab, RgbWorkingSpace, Illuminant),
-    LchAB(LchAB, RgbWorkingSpace, Illuminant),
     Color32(Color32),
 }
 
@@ -281,48 +213,8 @@ impl Color {
         self.into()
     }
 
-    pub fn lab(
-        &self,
-        ws: RgbWorkingSpace,
-        ref_white: Illuminant,
-        method: ChromaticAdaptationMethod,
-    ) -> Lab {
-        let xyz = Xyz::from_rgb(self.rgb(), ws);
-        let xyz = if ref_white != ws.reference_illuminant() {
-            xyz.chromatic_adaptation_transform(method, ws.reference_illuminant(), ref_white)
-        } else {
-            xyz
-        };
-        Lab::from_xyz(xyz, ref_white)
-    }
-
-    pub fn lch_ab(
-        &self,
-        ws: RgbWorkingSpace,
-        ref_white: Illuminant,
-        method: ChromaticAdaptationMethod,
-    ) -> LchAB {
-        self.lab(ws, ref_white, method).into()
-    }
-
-    pub fn luv(&self, ws: RgbWorkingSpace) -> Luv {
-        Xyz::from_rgb(self.rgb(), ws).into()
-    }
-
-    pub fn lch_uv(&self, ws: RgbWorkingSpace) -> LchUV {
-        Luv::from(Xyz::from_rgb(self.rgb(), ws)).into()
-    }
-
     pub fn rgb(&self) -> Rgb {
         self.into()
-    }
-
-    pub fn xyz(&self, working_space: RgbWorkingSpace) -> Xyz {
-        Xyz::from_rgb(self.rgb(), working_space)
-    }
-
-    pub fn xyy(&self, working_space: RgbWorkingSpace) -> xyY {
-        Xyz::from_rgb(self.rgb(), working_space).into()
     }
 
     pub fn shades(&self, total: u8) -> Vec<Color> {
@@ -343,7 +235,6 @@ impl Color {
         let step_b = (base_b as f32 / step_total).ceil() as u8;
 
         (0..total)
-            .into_iter()
             .map(|_| {
                 let c = Color32::from_rgb(base_r, base_g, base_b);
                 base_r = base_r.saturating_sub(step_r);
@@ -371,7 +262,6 @@ impl Color {
         let step_b = ((U8_MAX - base_b as f32) / step_total).ceil() as u8;
 
         (0..total)
-            .into_iter()
             .map(|_| {
                 let c = Color32::from_rgb(base_r, base_g, base_b);
                 base_r = base_r.saturating_add(step_r);
@@ -440,14 +330,6 @@ impl Color {
             self.as_hue_offset(9. / 12.),
         )
     }
-
-    pub fn monochromatic(&self) -> (Color, Color, Color) {
-        (
-            self.as_saturation_offset(-3. / 12.),
-            self.as_saturation_offset(-6. / 12.),
-            self.as_saturation_offset(-9. / 12.),
-        )
-    }
 }
 
 //##################################################################################################
@@ -477,12 +359,6 @@ impl From<Color> for Color32 {
             Color::Cmyk(c) => c.into(),
             Color::Hsv(c) => c.into(),
             Color::Hsl(c) => c.into(),
-            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
-            Color::xyY(c, ws) => Xyz::from(c).to_rgb(ws).into(),
-            Color::Luv(c, ws) => Xyz::from(c).to_rgb(ws).into(),
-            Color::LchUV(c, ws) => Xyz::from(c).to_rgb(ws).into(),
-            Color::Lab(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
-            Color::LchAB(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
             Color::Color32(c) => c,
         }
     }
@@ -513,12 +389,6 @@ macro_rules! to_epaint_color {
             Color::Cmyk(c) => Rgb::from(c).into(),
             Color::Hsv(c) => Rgb::from(c).into(),
             Color::Hsl(c) => Rgb::from(c).into(),
-            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
-            Color::xyY(c, ws) => Xyz::from(c).to_rgb(ws).into(),
-            Color::Luv(c, ws) => Xyz::from(c).to_rgb(ws).into(),
-            Color::LchUV(c, ws) => Xyz::from(c).to_rgb(ws).into(),
-            Color::Lab(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
-            Color::LchAB(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
             Color::Color32(c) => c.into(),
         }
     };

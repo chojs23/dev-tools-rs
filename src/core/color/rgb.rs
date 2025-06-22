@@ -1,7 +1,7 @@
 #![allow(clippy::many_single_char_names)]
 use crate::utils::math::Matrix1x3;
 
-use super::{hsv::Hsv, CIEColor, Cmyk, Color, Hsl, Xyz, CIE_E, CIE_K, U8_MAX};
+use super::{hsv::Hsv, Cmyk, Color, Hsl, CIE_E, CIE_K, U8_MAX};
 use eframe::{
     egui::{Color32, Rgba},
     epaint::{Hsva, HsvaGamma},
@@ -234,12 +234,6 @@ impl From<Color> for Rgb {
             Color::Cmyk(c) => c.into(),
             Color::Hsv(c) => c.into(),
             Color::Hsl(c) => c.into(),
-            Color::Xyz(c, ws) => c.to_rgb(ws),
-            Color::xyY(c, ws) => Xyz::from(c).to_rgb(ws),
-            Color::Luv(c, ws) => Xyz::from(c).to_rgb(ws),
-            Color::LchUV(c, ws) => Xyz::from(c).to_rgb(ws),
-            Color::Lab(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws),
-            Color::LchAB(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws),
             Color::Color32(c) => c.into(),
         }
     }

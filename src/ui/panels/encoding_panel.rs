@@ -22,6 +22,12 @@ impl UiPanel for EncodingPanel {
     }
 }
 
+impl Default for EncodingPanel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl EncodingPanel {
     pub fn new() -> Self {
         Self

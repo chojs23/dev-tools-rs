@@ -1,4 +1,3 @@
-use crate::core::color::CIEColor;
 use crate::utils::math;
 use eframe::{
     egui::{Color32, Rgba},
@@ -7,7 +6,7 @@ use eframe::{
 
 use serde::{Deserialize, Serialize};
 
-use super::{Color, Hsl, Hsv, Rgb, Xyz};
+use super::{Color, Hsl, Hsv, Rgb};
 
 #[derive(Clone, Copy, Default, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Cmyk {
@@ -118,12 +117,6 @@ impl From<Color> for Cmyk {
             Color::Cmyk(c) => c,
             Color::Hsv(c) => Rgb::from(c).into(),
             Color::Hsl(c) => Rgb::from(c).into(),
-            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
-            Color::xyY(c, ws) => Xyz::from(c).to_rgb(ws).into(),
-            Color::Luv(c, ws) => Xyz::from(c).to_rgb(ws).into(),
-            Color::LchUV(c, ws) => Xyz::from(c).to_rgb(ws).into(),
-            Color::Lab(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
-            Color::LchAB(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
             Color::Color32(c) => Rgb::from(c).into(),
         }
     }

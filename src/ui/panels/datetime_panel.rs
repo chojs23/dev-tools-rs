@@ -1,5 +1,3 @@
-use std::thread;
-
 use chrono::Datelike;
 use eframe::egui::{CursorIcon, Resize, ScrollArea, Ui};
 use eframe::epaint::Color32;
@@ -47,6 +45,12 @@ impl UiPanel for DateTimePanel {
 
         // Utilities section below
         self.render_utilities_section(ctx, ui);
+    }
+}
+
+impl Default for DateTimePanel {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

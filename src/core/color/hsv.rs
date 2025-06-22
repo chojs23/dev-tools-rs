@@ -1,7 +1,7 @@
 #![allow(clippy::many_single_char_names)]
 use crate::utils::math;
 
-use super::{rgb::Rgb, CIEColor, Cmyk, Color, Hsl, Xyz};
+use super::{rgb::Rgb, Cmyk, Color, Hsl};
 use eframe::{
     egui::{Color32, Rgba},
     epaint::Hsva,
@@ -122,12 +122,6 @@ impl From<Color> for Hsv {
             Color::Cmyk(c) => Rgb::from(c).into(),
             Color::Hsv(c) => c,
             Color::Hsl(c) => c.into(),
-            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
-            Color::xyY(c, ws) => Xyz::from(c).to_rgb(ws).into(),
-            Color::Luv(c, ws) => Xyz::from(c).to_rgb(ws).into(),
-            Color::LchUV(c, ws) => Xyz::from(c).to_rgb(ws).into(),
-            Color::Lab(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
-            Color::LchAB(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
             Color::Color32(c) => Rgb::from(c).into(),
         }
     }

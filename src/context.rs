@@ -201,18 +201,7 @@ impl AppCtx {
     }
 
     pub fn check_settings_change(&mut self) {
-        // if self.settings.chromatic_adaptation_method
-        //     != self.picker.sliders.chromatic_adaptation_method
-        // {
-        //     self.picker.sliders.chromatic_adaptation_method =
-        //         self.settings.chromatic_adaptation_method;
-        // }
-        // if self.settings.rgb_working_space != self.picker.sliders.rgb_working_space {
-        //     self.picker.new_workspace = Some(self.settings.rgb_working_space);
-        //     if self.settings.illuminant != self.picker.sliders.illuminant {
-        //         self.picker.new_illuminant = Some(self.settings.illuminant);
-        //     }
-        // }
+        //TODO:
     }
 }
 

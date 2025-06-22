@@ -22,6 +22,12 @@ impl UiPanel for RegexPanel {
     }
 }
 
+impl Default for RegexPanel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RegexPanel {
     pub fn new() -> Self {
         Self

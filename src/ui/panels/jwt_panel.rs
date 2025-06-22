@@ -25,6 +25,12 @@ impl UiPanel for JwtPanel {
     }
 }
 
+impl Default for JwtPanel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 //TODO: Maybe remove live conversion and just use buttons for encode/decode.
 // Format error messages to be more user-friendly.
 impl JwtPanel {

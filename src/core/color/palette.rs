@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::Write as _;
 
-use super::{format::CustomPaletteFormat, Color, Illuminant, RgbWorkingSpace};
+use super::{format::CustomPaletteFormat, Color};
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct NamedPalette {
@@ -19,18 +19,11 @@ impl Default for NamedPalette {
 }
 
 impl NamedPalette {
-    pub fn display(
-        &self,
-        format: &PaletteFormat,
-        ws: RgbWorkingSpace,
-        illuminant: Illuminant,
-    ) -> String {
+    pub fn display(&self, format: &PaletteFormat) -> String {
         match format {
             PaletteFormat::Gimp => self.palette.as_gimp_palette(&self.name),
             PaletteFormat::HexList => self.palette.as_hex_list(),
-            PaletteFormat::Custom(_, fmt) => fmt
-                .format_palette(&self.palette, ws, illuminant)
-                .unwrap_or_default(),
+            PaletteFormat::Custom(_, fmt) => fmt.format_palette(&self.palette).unwrap_or_default(),
         }
     }
 }

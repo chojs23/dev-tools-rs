@@ -5,6 +5,7 @@ use crate::context::FrameCtx;
 use crate::types::error::DisplayError;
 use crate::ui::traits::UiComponent;
 
+#[derive(Default)]
 pub struct ErrorDisplay {
     pub errors: Vec<DisplayError>,
 }

@@ -45,6 +45,12 @@ impl UiPanel for ColorPickerPanel {
     }
 }
 
+impl Default for ColorPickerPanel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ColorPickerPanel {
     pub fn new() -> Self {
         Self {

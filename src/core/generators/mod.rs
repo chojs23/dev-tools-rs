@@ -1,4 +1,4 @@
-use rand::{thread_rng, Rng};
+use rand::{rng, Rng};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -133,10 +133,10 @@ impl GeneratorProcessor {
         }
 
         let charset_chars: Vec<char> = charset.chars().collect();
-        let mut rng = thread_rng();
+        let mut rng = rng();
 
         let password: String = (0..self.password_length)
-            .map(|_| charset_chars[rng.gen_range(0..charset_chars.len())])
+            .map(|_| charset_chars[rng.random_range(0..charset_chars.len())])
             .collect();
 
         Ok(password)

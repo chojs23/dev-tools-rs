@@ -9,7 +9,7 @@ use super::color_tooltip;
 
 pub const COLORBOX_PICK_TOOLTIP: &str =
     "Primary click: set current\nMiddle click: save color\nSecondary click: copy color";
-pub const COLORBOX_DRAG_TOOLTIP: &str = "Drag and drop to change the order of colors";
+pub const _COLORBOX_DRAG_TOOLTIP: &str = "Drag and drop to change the order of colors";
 
 #[derive(Clone)]
 pub struct ColorBox {

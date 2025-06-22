@@ -23,6 +23,12 @@ impl UiPanel for TopPanel {
     }
 }
 
+impl Default for TopPanel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TopPanel {
     pub fn new() -> Self {
         Self

@@ -79,7 +79,7 @@ pub mod colors {
 
 use colors::*;
 
-use crate::core::color::{Color, ColorFormat, Illuminant, RgbWorkingSpace};
+use crate::core::color::{Color, ColorFormat};
 
 pub fn light_visuals() -> Visuals {
     let mut widgets = Widgets::light();

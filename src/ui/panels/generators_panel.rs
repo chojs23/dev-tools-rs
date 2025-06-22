@@ -100,6 +100,12 @@ impl GeneratorsPanel {
     }
 }
 
+impl Default for GeneratorsPanel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl UiPanel for GeneratorsPanel {
     fn display(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
         ui.heading("Generators");

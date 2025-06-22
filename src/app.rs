@@ -17,7 +17,7 @@ use crate::{
             generators_panel::GeneratorsPanel, jwt_panel::JwtPanel, regex_panel::RegexPanel,
             top_panel::TopPanel,
         },
-        traits::{UiComponent, UiPanel},
+        traits::{UiComponent, UiPanel, UiWindow},
         windows::settings::SettingsWindow,
     },
     utils::{render::TextureManager, screen_size::ScreenSize},
@@ -185,7 +185,7 @@ impl App {
             self.top_panel.render_tab_buttons(ctx, ui);
             ui.add_space(DOUBLE_SPACE);
             if self.top_panel.render_right_side_buttons(ctx, ui) {
-                self.windows.settings.show = true;
+                self.windows.settings.toggle();
             }
         });
     }

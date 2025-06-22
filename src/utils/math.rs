@@ -27,12 +27,14 @@ impl From<[[f32; 3]; 3]> for Matrix3 {
 }
 
 impl Matrix3 {
+    #[allow(dead_code)]
     pub fn determinant(&self) -> f32 {
         self[0][0] * (self[1][1] * self[2][2] - self[1][2] * self[2][1])
             - self[0][1] * (self[1][0] * self[2][2] - self[1][2] * self[2][0])
             + self[0][2] * (self[1][0] * self[2][1] - self[1][1] * self[2][0])
     }
 
+    #[allow(dead_code)]
     pub fn mul_by(&mut self, n: f32) {
         self.0[0][0] *= n;
         self.0[0][1] *= n;
@@ -45,6 +47,7 @@ impl Matrix3 {
         self.0[2][2] *= n;
     }
 
+    #[allow(dead_code)]
     pub fn inverse(&self) -> Option<Matrix3> {
         let det = self.determinant();
 
