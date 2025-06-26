@@ -178,14 +178,15 @@ impl EncodingPanel {
                 ctx.app.encoding.clear();
             }
 
-            if ui
-                .button("⇄ Swap")
-                .on_hover_cursor(CursorIcon::PointingHand)
-                .on_hover_text("Swap input and output")
-                .clicked()
-            {
-                std::mem::swap(&mut ctx.app.encoding.input, &mut ctx.app.encoding.output);
-            }
+            // Disable swap
+            // if ui
+            //     .button("⇄ Swap")
+            //     .on_hover_cursor(CursorIcon::PointingHand)
+            //     .on_hover_text("Swap input and output")
+            //     .clicked()
+            // {
+            //     std::mem::swap(&mut ctx.app.encoding.input, &mut ctx.app.encoding.output);
+            // }
         });
     }
 
