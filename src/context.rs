@@ -151,7 +151,7 @@ impl AppCtx {
             #[cfg(not(target_arch = "wasm32"))]
             if let Some(path) = Palettes::dir(APP_NAME) {
                 println!("Loading palettes from: {}", path.display());
-                match Palettes::load(path.join(Palettes::FILE_NAME)) {
+                match Palettes::load_or_default(path.join(Palettes::FILE_NAME)) {
                     Ok(palettes) => self.palettes = palettes,
                     Err(e) => append_global_error(format!("failed to load palettes, {e:?}")),
                 }

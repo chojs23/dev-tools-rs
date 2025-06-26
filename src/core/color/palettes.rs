@@ -149,6 +149,17 @@ impl Palettes {
         serde_json::from_slice(&data).context("failed to deserialize saved colors file")
     }
 
+    /// Safely loads the saved colors from the specified file located at `path`.
+    /// If the file doesn't exist, returns a default `Palettes` instance.
+    /// If the file exists but is corrupted, returns an error.
+    pub fn load_or_default(path: impl AsRef<Path>) -> Result<Self> {
+        let path = path.as_ref();
+        if !path.exists() {
+            return Ok(Self::default());
+        }
+        Self::load(path)
+    }
+
     pub fn load_from_storage(storage: &dyn eframe::Storage) -> Result<Self> {
         if let Some(json) = storage.get_string(Self::STORAGE_KEY) {
             Self::from_json_str(&json)
@@ -167,9 +178,30 @@ impl Palettes {
 
     /// Saves this colors as json file in the provided `path`.
     pub fn save(&self, path: impl AsRef<Path>) -> Result<()> {
+        let path = path.as_ref();
+
+        // Create parent directory if it doesn't exist
+        if let Some(parent) = path.parent() {
+            if !parent.exists() {
+                fs::create_dir_all(parent)
+                    .context("failed to create parent directory for palettes file")?;
+            }
+        }
+
         let mut data = Vec::with_capacity(128);
         serde_json::to_writer(&mut data, &self).context("failed to serialize saved colors")?;
         fs::write(path, &data).context("failed to write saved colors to a file")
+    }
+
+    /// Creates a default palettes file at the specified path if it doesn't exist.
+    /// This is useful for first-time setup to avoid file not found errors.
+    pub fn create_default_file_if_not_exists(path: impl AsRef<Path>) -> Result<()> {
+        let path = path.as_ref();
+        if !path.exists() {
+            let default_palettes = Self::default();
+            default_palettes.save(path)?;
+        }
+        Ok(())
     }
 
     pub fn save_to_storage(&self, storage: &mut dyn eframe::Storage) -> Result<()> {
