@@ -1,14 +1,31 @@
-use std::fmt;
+mod asymmetric;
+mod symmetric;
+
+use anyhow::{anyhow, Result};
+use asymmetric::{
+    ecdsa::{ecdsa_sign, ecdsa_verify},
+    rsa::{
+        generate_ecdsa_keypair, generate_rsa_keypair, rsa_decrypt, rsa_encrypt, rsa_sign,
+        rsa_verify,
+    },
+};
 use serde::{Deserialize, Serialize};
-use anyhow::{Result, anyhow};
+use std::fmt;
+use symmetric::{
+    aes::{
+        generate_des_iv, generate_des_key, generate_rc4_key, generate_triple_des_key, rc4_decrypt,
+        rc4_encrypt, AesKeySize,
+    },
+    des::{des_decrypt, des_encrypt},
+    tdes::{triple_des_decrypt, triple_des_encrypt},
+};
 
-pub mod symmetric;
-pub mod asymmetric;
-
-use symmetric::*;
-use asymmetric::*;
+use crate::core::crypto::symmetric::aes::{
+    aes_decrypt, aes_encrypt, generate_aes_iv, generate_aes_key,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum CryptoAlgorithm {
     AES,
     DES,
@@ -44,11 +61,12 @@ impl CryptoAlgorithm {
     }
 
     pub fn is_symmetric(&self) -> bool {
-        matches!(self, 
-            CryptoAlgorithm::AES | 
-            CryptoAlgorithm::DES | 
-            CryptoAlgorithm::TripleDES | 
-            CryptoAlgorithm::RC4
+        matches!(
+            self,
+            CryptoAlgorithm::AES
+                | CryptoAlgorithm::DES
+                | CryptoAlgorithm::TripleDES
+                | CryptoAlgorithm::RC4
         )
     }
 
@@ -58,6 +76,7 @@ impl CryptoAlgorithm {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum CipherMode {
     ECB,
     CBC,
@@ -104,10 +123,11 @@ pub struct CryptoInput {
     pub mode: Option<CipherMode>,
     pub input_text: String,
     pub key: String,
-    pub iv: Option<String>, // Initialization Vector for CBC mode
-    pub public_key: Option<String>, // For asymmetric algorithms
-    pub private_key: Option<String>, // For asymmetric algorithms
-    pub signature: Option<String>, // For verification
+    pub key_size: Option<AesKeySize>, // Only for AES
+    pub iv: Option<String>,           // Initialization Vector for CBC mode
+    pub public_key: Option<String>,   // For asymmetric algorithms
+    pub private_key: Option<String>,  // For asymmetric algorithms
+    pub signature: Option<String>,    // For verification
 }
 
 impl Default for CryptoInput {
@@ -118,6 +138,7 @@ impl Default for CryptoInput {
             mode: Some(CipherMode::CBC),
             input_text: String::new(),
             key: String::new(),
+            key_size: Some(AesKeySize::Aes128),
             iv: None,
             public_key: None,
             private_key: None,
@@ -140,7 +161,7 @@ impl CryptographyProcessor {
 
     pub fn process(&mut self) -> Result<String> {
         self.error = None;
-        
+
         let result = match self.input.algorithm {
             CryptoAlgorithm::AES => self.process_aes(),
             CryptoAlgorithm::DES => self.process_des(),
@@ -166,9 +187,21 @@ impl CryptographyProcessor {
 
     fn process_aes(&self) -> Result<String> {
         let mode = self.input.mode.unwrap_or(CipherMode::CBC);
+        let key_size = self.input.key_size.unwrap_or(AesKeySize::Aes128);
         match self.input.operation {
-            CryptoOperation::Encrypt => aes_encrypt(&self.input.input_text, &self.input.key, mode, self.input.iv.as_deref()),
-            CryptoOperation::Decrypt => aes_decrypt(&self.input.input_text, &self.input.key, mode, self.input.iv.as_deref()),
+            CryptoOperation::Encrypt => aes_encrypt(
+                &self.input.input_text,
+                &self.input.key,
+                key_size,
+                mode,
+                self.input.iv.as_deref(),
+            ),
+            CryptoOperation::Decrypt => aes_decrypt(
+                &self.input.input_text,
+                &self.input.key,
+                mode,
+                self.input.iv.as_deref(),
+            ),
             _ => Err(anyhow!("Invalid operation for AES")),
         }
     }
@@ -176,8 +209,18 @@ impl CryptographyProcessor {
     fn process_des(&self) -> Result<String> {
         let mode = self.input.mode.unwrap_or(CipherMode::CBC);
         match self.input.operation {
-            CryptoOperation::Encrypt => des_encrypt(&self.input.input_text, &self.input.key, mode, self.input.iv.as_deref()),
-            CryptoOperation::Decrypt => des_decrypt(&self.input.input_text, &self.input.key, mode, self.input.iv.as_deref()),
+            CryptoOperation::Encrypt => des_encrypt(
+                &self.input.input_text,
+                &self.input.key,
+                mode,
+                self.input.iv.as_deref(),
+            ),
+            CryptoOperation::Decrypt => des_decrypt(
+                &self.input.input_text,
+                &self.input.key,
+                mode,
+                self.input.iv.as_deref(),
+            ),
             _ => Err(anyhow!("Invalid operation for DES")),
         }
     }
@@ -185,8 +228,18 @@ impl CryptographyProcessor {
     fn process_triple_des(&self) -> Result<String> {
         let mode = self.input.mode.unwrap_or(CipherMode::CBC);
         match self.input.operation {
-            CryptoOperation::Encrypt => triple_des_encrypt(&self.input.input_text, &self.input.key, mode, self.input.iv.as_deref()),
-            CryptoOperation::Decrypt => triple_des_decrypt(&self.input.input_text, &self.input.key, mode, self.input.iv.as_deref()),
+            CryptoOperation::Encrypt => triple_des_encrypt(
+                &self.input.input_text,
+                &self.input.key,
+                mode,
+                self.input.iv.as_deref(),
+            ),
+            CryptoOperation::Decrypt => triple_des_decrypt(
+                &self.input.input_text,
+                &self.input.key,
+                mode,
+                self.input.iv.as_deref(),
+            ),
             _ => Err(anyhow!("Invalid operation for Triple DES")),
         }
     }
@@ -202,24 +255,39 @@ impl CryptographyProcessor {
     fn process_rsa(&self) -> Result<String> {
         match self.input.operation {
             CryptoOperation::Encrypt => {
-                let public_key = self.input.public_key.as_ref()
+                let public_key = self
+                    .input
+                    .public_key
+                    .as_ref()
                     .ok_or_else(|| anyhow!("Public key required for RSA encryption"))?;
                 rsa_encrypt(&self.input.input_text, public_key)
             }
             CryptoOperation::Decrypt => {
-                let private_key = self.input.private_key.as_ref()
+                let private_key = self
+                    .input
+                    .private_key
+                    .as_ref()
                     .ok_or_else(|| anyhow!("Private key required for RSA decryption"))?;
                 rsa_decrypt(&self.input.input_text, private_key)
             }
             CryptoOperation::Sign => {
-                let private_key = self.input.private_key.as_ref()
+                let private_key = self
+                    .input
+                    .private_key
+                    .as_ref()
                     .ok_or_else(|| anyhow!("Private key required for RSA signing"))?;
                 rsa_sign(&self.input.input_text, private_key)
             }
             CryptoOperation::Verify => {
-                let public_key = self.input.public_key.as_ref()
+                let public_key = self
+                    .input
+                    .public_key
+                    .as_ref()
                     .ok_or_else(|| anyhow!("Public key required for RSA verification"))?;
-                let signature = self.input.signature.as_ref()
+                let signature = self
+                    .input
+                    .signature
+                    .as_ref()
                     .ok_or_else(|| anyhow!("Signature required for RSA verification"))?;
                 let is_valid = rsa_verify(&self.input.input_text, signature, public_key)?;
                 Ok(format!("Signature valid: {}", is_valid))
@@ -230,19 +298,30 @@ impl CryptographyProcessor {
     fn process_ecdsa(&self) -> Result<String> {
         match self.input.operation {
             CryptoOperation::Sign => {
-                let private_key = self.input.private_key.as_ref()
+                let private_key = self
+                    .input
+                    .private_key
+                    .as_ref()
                     .ok_or_else(|| anyhow!("Private key required for ECDSA signing"))?;
                 ecdsa_sign(&self.input.input_text, private_key)
             }
             CryptoOperation::Verify => {
-                let public_key = self.input.public_key.as_ref()
+                let public_key = self
+                    .input
+                    .public_key
+                    .as_ref()
                     .ok_or_else(|| anyhow!("Public key required for ECDSA verification"))?;
-                let signature = self.input.signature.as_ref()
+                let signature = self
+                    .input
+                    .signature
+                    .as_ref()
                     .ok_or_else(|| anyhow!("Signature required for ECDSA verification"))?;
                 let is_valid = ecdsa_verify(&self.input.input_text, signature, public_key)?;
                 Ok(format!("Signature valid: {}", is_valid))
             }
-            _ => Err(anyhow!("ECDSA only supports signing and verification operations")),
+            _ => Err(anyhow!(
+                "ECDSA only supports signing and verification operations"
+            )),
         }
     }
 
@@ -270,7 +349,7 @@ impl CryptographyProcessor {
                 return Ok(());
             }
         };
-        
+
         self.input.key = key;
         Ok(())
     }
@@ -288,4 +367,3 @@ impl CryptographyProcessor {
         Ok(())
     }
 }
-
