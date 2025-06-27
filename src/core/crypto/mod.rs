@@ -1,9 +1,10 @@
-mod asymmetric;
-mod symmetric;
+pub mod asymmetric;
+pub mod symmetric;
 
 use anyhow::{anyhow, Result};
 use asymmetric::{
     ecdsa::{ecdsa_sign, ecdsa_verify},
+    generate_des_iv, generate_des_key, generate_triple_des_key,
     rsa::{
         generate_ecdsa_keypair, generate_rsa_keypair, rsa_decrypt, rsa_encrypt, rsa_sign,
         rsa_verify,
@@ -12,17 +13,14 @@ use asymmetric::{
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use symmetric::{
-    aes::{
-        generate_des_iv, generate_des_key, generate_rc4_key, generate_triple_des_key, rc4_decrypt,
-        rc4_encrypt, AesKeySize,
-    },
+    aes::AesKeySize,
     des::{des_decrypt, des_encrypt},
+    generate_aes_iv, generate_aes_key, generate_rc4_key,
+    rc4::{rc4_decrypt, rc4_encrypt},
     tdes::{triple_des_decrypt, triple_des_encrypt},
 };
 
-use crate::core::crypto::symmetric::aes::{
-    aes_decrypt, aes_encrypt, generate_aes_iv, generate_aes_key,
-};
+use crate::core::crypto::symmetric::aes::{aes_decrypt, aes_encrypt};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[allow(clippy::upper_case_acronyms)]
@@ -199,6 +197,7 @@ impl CryptographyProcessor {
             CryptoOperation::Decrypt => aes_decrypt(
                 &self.input.input_text,
                 &self.input.key,
+                key_size,
                 mode,
                 self.input.iv.as_deref(),
             ),
@@ -332,10 +331,14 @@ impl CryptographyProcessor {
 
     pub fn generate_random_key(&mut self) -> Result<()> {
         let key = match self.input.algorithm {
-            CryptoAlgorithm::AES => generate_aes_key()?,
-            CryptoAlgorithm::DES => generate_des_key()?,
-            CryptoAlgorithm::TripleDES => generate_triple_des_key()?,
-            CryptoAlgorithm::RC4 => generate_rc4_key()?,
+            CryptoAlgorithm::AES => generate_aes_key(
+                self.input
+                    .key_size
+                    .ok_or(anyhow!("Key size is required for AES"))?,
+            ),
+            CryptoAlgorithm::DES => generate_des_key(),
+            CryptoAlgorithm::TripleDES => generate_triple_des_key(),
+            CryptoAlgorithm::RC4 => generate_rc4_key(),
             CryptoAlgorithm::RSA => {
                 let (public_key, private_key) = generate_rsa_keypair()?;
                 self.input.public_key = Some(public_key);
@@ -357,9 +360,9 @@ impl CryptographyProcessor {
     pub fn generate_random_iv(&mut self) -> Result<()> {
         if self.input.mode == Some(CipherMode::CBC) {
             let iv = match self.input.algorithm {
-                CryptoAlgorithm::AES => generate_aes_iv()?,
-                CryptoAlgorithm::DES => generate_des_iv()?,
-                CryptoAlgorithm::TripleDES => generate_des_iv()?,
+                CryptoAlgorithm::AES => generate_aes_iv(),
+                CryptoAlgorithm::DES => generate_des_iv(),
+                CryptoAlgorithm::TripleDES => generate_des_iv(),
                 _ => return Err(anyhow!("IV not required for this algorithm")),
             };
             self.input.iv = Some(iv);
