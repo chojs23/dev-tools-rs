@@ -37,10 +37,24 @@ serde_json = "1"
 uuid = { version = "1.0", features = ["v4", "serde"] }
 ulid = "1.0"
 nanoid = "0.4"
-rand = "0.9.1"
+rand = "0.8"
 
 # Date and time handling
 chrono = { version = "0.4.41", features = ["serde"] }
+
+# Cryptography dependencies
+aes = "0.8"
+des = "0.8"
+cbc = "0.1"
+ecb = "0.1"
+rc4 = "0.1"
+rsa = { version = "0.9", features = ["sha2"] }
+p256 = { version = "0.13", features = ["ecdsa"] }
+hex = "0.4"
+sha2 = "0.10"
+rand_core = "0.9.3"
+cipher = { version = "0.4", features = ["std"] }
+block-modes = "0.9"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 x11rb = { version = "0.13", features = ["image", "cursor", "resource_manager"] }

@@ -1,5 +1,6 @@
 pub mod color_picker;
 pub mod colorbox;
+pub mod input_output_box;
 pub mod layout;
 pub mod slider_1d;
 pub mod slider_2d;

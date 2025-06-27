@@ -1,4 +1,5 @@
 pub mod color_picker_panel;
+pub mod cryptography_panel;
 pub mod datetime_panel;
 pub mod encoding_panel;
 pub mod error_display;

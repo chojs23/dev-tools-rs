@@ -12,10 +12,10 @@ use crate::{
     ui::{
         components::{colors::*, *},
         panels::{
-            color_picker_panel::ColorPickerPanel, datetime_panel::DateTimePanel,
-            encoding_panel::EncodingPanel, error_display::ErrorDisplay,
-            generators_panel::GeneratorsPanel, jwt_panel::JwtPanel, regex_panel::RegexPanel,
-            top_panel::TopPanel,
+            color_picker_panel::ColorPickerPanel, cryptography_panel::CryptographyPanel, 
+            datetime_panel::DateTimePanel, encoding_panel::EncodingPanel, 
+            error_display::ErrorDisplay, generators_panel::GeneratorsPanel, 
+            jwt_panel::JwtPanel, regex_panel::RegexPanel, top_panel::TopPanel,
         },
         traits::{UiComponent, UiPanel, UiWindow},
         windows::settings::SettingsWindow,
@@ -43,6 +43,7 @@ pub enum CentralPanelTab {
     ColorPicker,
     Generators,
     DateTime,
+    Cryptography,
 }
 
 #[derive(Default)]
@@ -60,6 +61,7 @@ pub struct App {
     pub color_picker_panel: ColorPickerPanel,
     pub generators_panel: GeneratorsPanel,
     pub datetime_panel: DateTimePanel,
+    pub cryptography_panel: CryptographyPanel,
     pub error_display: ErrorDisplay,
 }
 
@@ -134,6 +136,7 @@ impl App {
             color_picker_panel: ColorPickerPanel::new(),
             generators_panel: GeneratorsPanel::new(),
             datetime_panel: DateTimePanel::new(),
+            cryptography_panel: CryptographyPanel::new(),
             error_display: ErrorDisplay::new(),
         });
 
@@ -237,6 +240,7 @@ impl App {
                 CentralPanelTab::Regex => self.regex_panel_ui(ctx, ui),
                 CentralPanelTab::Generators => self.generators_panel_ui(ctx, ui),
                 CentralPanelTab::DateTime => self.datetime_panel_ui(ctx, ui),
+                CentralPanelTab::Cryptography => self.cryptography_panel_ui(ctx, ui),
             });
     }
 
@@ -268,6 +272,11 @@ impl App {
     fn datetime_panel_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut egui::Ui) {
         self.error_display.render(ctx, ui);
         self.datetime_panel.display(ctx, ui);
+    }
+
+    fn cryptography_panel_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut egui::Ui) {
+        self.error_display.render(ctx, ui);
+        self.cryptography_panel.display(ctx, ui);
     }
 
     fn check_backtick_key_pressed(&mut self, ctx: &mut FrameCtx<'_>) {

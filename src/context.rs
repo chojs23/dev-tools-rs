@@ -8,6 +8,7 @@ use crate::{
     app::{CentralPanelTab, DARK_VISUALS, LIGHT_VISUALS},
     core::{
         color::{palettes::Palettes, Color, ColorFormat},
+        crypto::CryptographyProcessor,
         datetime::DateTimeProcessor,
         encoding::EncodingProcessor,
         generators::GeneratorProcessor,
@@ -38,6 +39,7 @@ pub struct AppCtx {
     pub regex: RegexProcessor,
     pub generator: GeneratorProcessor,
     pub datetime: DateTimeProcessor,
+    pub crypto: CryptographyProcessor,
     pub picker: ColorPicker,
     pub palettes: Palettes,
 
@@ -78,6 +80,7 @@ impl Default for AppCtx {
             regex: RegexProcessor::default(),
             generator: GeneratorProcessor::default(),
             datetime: DateTimeProcessor::default(),
+            crypto: CryptographyProcessor::default(),
             picker: ColorPicker::default(),
             palettes: Palettes::default(),
             cursor_pick_color: Color::black(),

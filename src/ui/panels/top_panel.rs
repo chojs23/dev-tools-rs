@@ -104,6 +104,14 @@ impl TopPanel {
                 ctx.app.sidepanel.show = false;
             }
         );
+        add_button_if!(
+            "Cryptography",
+            matches!(ctx.app.central_panel_tab, CentralPanelTab::Cryptography),
+            {
+                ctx.app.central_panel_tab = CentralPanelTab::Cryptography;
+                ctx.app.sidepanel.show = false;
+            }
+        );
     }
 
     pub fn render_right_side_buttons(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) -> bool {
