@@ -19,6 +19,17 @@ Some of these features are work in progress.
   - Base32, Base64, URL Base64, MIME Base64
   - URL encoding
 
+- **Cryptography**
+
+  - AES, DES, TDES and more
+  - RSA, ECDSA
+
+- **Image Tools**
+
+  - Image Resizer
+  - Image Format Converter
+  - Image Metadata Viewer
+
 - **Text Utilities**
 
   - Regular Expression Matcher
