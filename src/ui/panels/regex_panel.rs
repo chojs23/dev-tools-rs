@@ -1,4 +1,6 @@
-use eframe::egui::{Align, Color32, CursorIcon, Layout, Resize, RichText, ScrollArea, Ui};
+use eframe::egui::{
+    Align, Color32, CursorIcon, Layout, Resize, RichText, ScrollArea, TextEdit, Ui,
+};
 
 use crate::{
     context::FrameCtx,
@@ -48,39 +50,30 @@ impl RegexPanel {
     }
 
     fn render_pattern_section(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
-        //TODO: resizable scroll area looks suck
         Resize::default()
             .id_salt("regex_pattern_container")
+            .default_height(300.0)
             .show(ui, |ui| {
                 ui.label("Regular Expression Pattern");
                 ui.add_space(HALF_SPACE);
+
                 ScrollArea::vertical()
-                    .id_salt("regex_pattern")
-                    .stick_to_bottom(false)
-                    .drag_to_scroll(false)
+                    .auto_shrink([false, false])
                     .show(ui, |ui| {
-                        ui.set_max_height(ui.available_height() * 0.9);
+                        ui.set_max_height(ui.available_height() * 1.0);
                         ui.set_max_width(ui.available_width() * 1.0);
                         ui.with_layout(
                             Layout::top_down(Align::Min)
                                 .with_main_justify(true)
                                 .with_cross_justify(true),
                             |ui| {
-                                let response = ui.text_edit_multiline(&mut ctx.app.regex.pattern);
+                                let input_edit = TextEdit::multiline(&mut ctx.app.regex.pattern)
+                                    .desired_width(ui.available_width());
 
-                                // Auto-process when pattern changes if text is not empty
-                                if response.changed() && !ctx.app.regex.text.is_empty() {
-                                    if let Err(e) = ctx.app.regex.process() {
-                                        // Error is already stored in the result, no need to display here
-                                        let _ = e;
-                                    }
-                                }
+                                ui.add(input_edit);
                             },
-                        )
+                        );
                     });
-
-                //To ensure resize handles are visible
-                ui.add_space(HALF_SPACE);
             });
     }
 
