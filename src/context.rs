@@ -85,7 +85,7 @@ impl Default for AppCtx {
             palettes: Palettes::default(),
             cursor_pick_color: Color::black(),
             current_selected_color: Color::black(),
-            central_panel_tab: CentralPanelTab::Jwt,
+            central_panel_tab: CentralPanelTab::DateTime,
             zoom_window_dragged: false,
             color_picking_enabled: false,
             color_picking_history: Vec::new(),

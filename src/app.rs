@@ -12,10 +12,10 @@ use crate::{
     ui::{
         components::{colors::*, *},
         panels::{
-            color_picker_panel::ColorPickerPanel, cryptography_panel::CryptographyPanel, 
-            datetime_panel::DateTimePanel, encoding_panel::EncodingPanel, 
-            error_display::ErrorDisplay, generators_panel::GeneratorsPanel, 
-            jwt_panel::JwtPanel, regex_panel::RegexPanel, top_panel::TopPanel,
+            color_picker_panel::ColorPickerPanel, cryptography_panel::CryptographyPanel,
+            datetime_panel::DateTimePanel, encoding_panel::EncodingPanel,
+            error_display::ErrorDisplay, generators_panel::GeneratorsPanel, jwt_panel::JwtPanel,
+            regex_panel::RegexPanel, top_panel::TopPanel,
         },
         traits::{UiComponent, UiPanel, UiWindow},
         windows::settings::SettingsWindow,
@@ -91,9 +91,9 @@ impl eframe::App for App {
                 .set_pixels_per_point(ctx.app.settings.pixels_per_point);
             ctx.app.check_settings_change();
 
-            self.top_panel(&mut ctx);
+            self.display_top_panel(&mut ctx);
 
-            self.central_panel(&mut ctx);
+            self.display_central_panel(&mut ctx);
 
             self.display_windows(&mut ctx);
 
@@ -183,21 +183,11 @@ impl App {
         app
     }
 
-    fn top_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
-        ui.horizontal(|ui| {
-            self.top_panel.render_tab_buttons(ctx, ui);
-            ui.add_space(DOUBLE_SPACE);
-            if self.top_panel.render_right_side_buttons(ctx, ui) {
-                self.windows.settings.toggle();
-            }
-        });
-    }
-
     fn display_windows(&mut self, ctx: &mut FrameCtx<'_>) {
         self.windows.settings.display(ctx);
     }
 
-    fn top_panel(&mut self, ctx: &mut FrameCtx<'_>) {
+    fn display_top_panel(&mut self, ctx: &mut FrameCtx<'_>) {
         let frame = egui::Frame {
             fill: if ctx.egui.style().visuals.dark_mode {
                 *D_BG_00
@@ -210,11 +200,14 @@ impl App {
         egui::TopBottomPanel::top("top panel")
             .frame(frame)
             .show(ctx.egui, |ui| {
-                self.top_ui(ctx, ui);
+                self.top_panel.display(ctx, ui);
+                if self.top_panel.render_right_side_buttons(ctx, ui) {
+                    self.windows.settings.toggle();
+                }
             });
     }
 
-    fn central_panel(&mut self, ctx: &mut FrameCtx<'_>) {
+    fn display_central_panel(&mut self, ctx: &mut FrameCtx<'_>) {
         let _frame = egui::Frame {
             fill: if ctx.egui.style().visuals.dark_mode {
                 *D_BG_0

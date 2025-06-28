@@ -17,8 +17,6 @@ impl UiPanel for TopPanel {
         ui.horizontal(|ui| {
             self.render_tab_buttons(ctx, ui);
             ui.add_space(DOUBLE_SPACE);
-            let _settings_clicked = self.render_right_side_buttons(ctx, ui);
-            // Settings handling will be done in the App struct
         });
     }
 }
@@ -58,10 +56,11 @@ impl TopPanel {
         }
 
         add_button_if!(
-            "JWT",
-            matches!(ctx.app.central_panel_tab, CentralPanelTab::Jwt),
+            "DateTime",
+            matches!(ctx.app.central_panel_tab, CentralPanelTab::DateTime),
             {
-                ctx.app.central_panel_tab = CentralPanelTab::Jwt;
+                ctx.app.central_panel_tab = CentralPanelTab::DateTime;
+                ctx.app.sidepanel.show = false;
             }
         );
         add_button_if!(
@@ -70,6 +69,13 @@ impl TopPanel {
             {
                 ctx.app.central_panel_tab = CentralPanelTab::ColorPicker;
                 ctx.app.sidepanel.show = false;
+            }
+        );
+        add_button_if!(
+            "JWT",
+            matches!(ctx.app.central_panel_tab, CentralPanelTab::Jwt),
+            {
+                ctx.app.central_panel_tab = CentralPanelTab::Jwt;
             }
         );
         add_button_if!(
@@ -93,14 +99,6 @@ impl TopPanel {
             matches!(ctx.app.central_panel_tab, CentralPanelTab::Generators),
             {
                 ctx.app.central_panel_tab = CentralPanelTab::Generators;
-                ctx.app.sidepanel.show = false;
-            }
-        );
-        add_button_if!(
-            "DateTime",
-            matches!(ctx.app.central_panel_tab, CentralPanelTab::DateTime),
-            {
-                ctx.app.central_panel_tab = CentralPanelTab::DateTime;
                 ctx.app.sidepanel.show = false;
             }
         );
