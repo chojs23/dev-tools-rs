@@ -1,8 +1,8 @@
-use eframe::egui::{ComboBox, ScrollArea, TextEdit, Ui, Color32, Button};
+use eframe::egui::{Button, Color32, ComboBox, ScrollArea, TextEdit, Ui};
 
 use crate::{
     context::FrameCtx,
-    core::crypto::{CryptoAlgorithm, CryptoOperation, CipherMode},
+    core::crypto::{CipherMode, CryptoAlgorithm, CryptoOperation},
     ui::{
         components::{input_output_box::InputOutputBox, DOUBLE_SPACE, HALF_SPACE, SPACE},
         traits::UiPanel,
@@ -101,8 +101,8 @@ impl CryptographyPanel {
     }
 
     fn render_mode_selection(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
-        if ctx.app.crypto.input.algorithm.is_symmetric() 
-            && !matches!(ctx.app.crypto.input.algorithm, CryptoAlgorithm::RC4) 
+        if ctx.app.crypto.input.algorithm.is_symmetric()
+            && !matches!(ctx.app.crypto.input.algorithm, CryptoAlgorithm::RC4)
         {
             ui.horizontal(|ui| {
                 ui.label("Mode:");
@@ -111,11 +111,14 @@ impl CryptographyPanel {
                     .selected_text(current_mode.to_string())
                     .show_ui(ui, |ui| {
                         for mode in CipherMode::variants() {
-                            if ui.selectable_value(
-                                &mut ctx.app.crypto.input.mode,
-                                Some(*mode),
-                                mode.to_string(),
-                            ).clicked() {
+                            if ui
+                                .selectable_value(
+                                    &mut ctx.app.crypto.input.mode,
+                                    Some(*mode),
+                                    mode.to_string(),
+                                )
+                                .clicked()
+                            {
                                 // Clear IV when switching to ECB mode
                                 if *mode == CipherMode::ECB {
                                     ctx.app.crypto.input.iv = None;
@@ -138,7 +141,7 @@ impl CryptographyPanel {
                     }
                 }
             });
-            
+
             let key_hint = match ctx.app.crypto.input.algorithm {
                 CryptoAlgorithm::AES => "32 hex characters (16 bytes)",
                 CryptoAlgorithm::DES => "16 hex characters (8 bytes)",
@@ -146,13 +149,13 @@ impl CryptographyPanel {
                 CryptoAlgorithm::RC4 => "1-512 hex characters (up to 256 bytes)",
                 _ => "",
             };
-            
+
             ui.add(
                 TextEdit::multiline(&mut ctx.app.crypto.input.key)
                     .hint_text(key_hint)
                     .desired_width(ui.available_width()),
             );
-            
+
             // IV for CBC mode
             if ctx.app.crypto.input.mode == Some(CipherMode::CBC) {
                 ui.add_space(HALF_SPACE);
@@ -165,13 +168,15 @@ impl CryptographyPanel {
                         }
                     }
                 });
-                
+
                 let iv_hint = match ctx.app.crypto.input.algorithm {
                     CryptoAlgorithm::AES => "32 hex characters (16 bytes)",
-                    CryptoAlgorithm::DES | CryptoAlgorithm::TripleDES => "16 hex characters (8 bytes)",
+                    CryptoAlgorithm::DES | CryptoAlgorithm::TripleDES => {
+                        "16 hex characters (8 bytes)"
+                    }
                     _ => "",
                 };
-                
+
                 let mut iv = ctx.app.crypto.input.iv.clone().unwrap_or_default();
                 ui.add(
                     TextEdit::multiline(&mut iv)
@@ -189,25 +194,31 @@ impl CryptographyPanel {
                         ui.add_space(HALF_SPACE);
                         if ui.button("Generate Keypair").clicked() {
                             if let Err(e) = ctx.app.crypto.generate_random_key() {
-                                ctx.app.crypto.error = Some(format!("Keypair generation failed: {}", e));
+                                ctx.app.crypto.error =
+                                    Some(format!("Keypair generation failed: {}", e));
                             }
                         }
                     });
-                    
-                    let mut public_key = ctx.app.crypto.input.public_key.clone().unwrap_or_default();
+
+                    let mut public_key =
+                        ctx.app.crypto.input.public_key.clone().unwrap_or_default();
                     let hint = match ctx.app.crypto.input.algorithm {
                         CryptoAlgorithm::RSA => "PEM format RSA public key",
                         CryptoAlgorithm::ECDSA => "Hex encoded public key",
                         _ => "",
                     };
-                    
+
                     ui.add(
                         TextEdit::multiline(&mut public_key)
                             .hint_text(hint)
                             .desired_rows(6)
                             .desired_width(ui.available_width()),
                     );
-                    ctx.app.crypto.input.public_key = if public_key.is_empty() { None } else { Some(public_key) };
+                    ctx.app.crypto.input.public_key = if public_key.is_empty() {
+                        None
+                    } else {
+                        Some(public_key)
+                    };
                 }
                 CryptoOperation::Decrypt | CryptoOperation::Sign => {
                     ui.horizontal(|ui| {
@@ -215,28 +226,34 @@ impl CryptographyPanel {
                         ui.add_space(HALF_SPACE);
                         if ui.button("Generate Keypair").clicked() {
                             if let Err(e) = ctx.app.crypto.generate_random_key() {
-                                ctx.app.crypto.error = Some(format!("Keypair generation failed: {}", e));
+                                ctx.app.crypto.error =
+                                    Some(format!("Keypair generation failed: {}", e));
                             }
                         }
                     });
-                    
-                    let mut private_key = ctx.app.crypto.input.private_key.clone().unwrap_or_default();
+
+                    let mut private_key =
+                        ctx.app.crypto.input.private_key.clone().unwrap_or_default();
                     let hint = match ctx.app.crypto.input.algorithm {
                         CryptoAlgorithm::RSA => "PEM format RSA private key",
                         CryptoAlgorithm::ECDSA => "Hex encoded private key",
                         _ => "",
                     };
-                    
+
                     ui.add(
                         TextEdit::multiline(&mut private_key)
                             .hint_text(hint)
                             .desired_rows(6)
                             .desired_width(ui.available_width()),
                     );
-                    ctx.app.crypto.input.private_key = if private_key.is_empty() { None } else { Some(private_key) };
+                    ctx.app.crypto.input.private_key = if private_key.is_empty() {
+                        None
+                    } else {
+                        Some(private_key)
+                    };
                 }
             }
-            
+
             // Signature input for verification
             if ctx.app.crypto.input.operation == CryptoOperation::Verify {
                 ui.add_space(HALF_SPACE);
@@ -247,7 +264,11 @@ impl CryptographyPanel {
                         .hint_text("Hex encoded signature")
                         .desired_width(ui.available_width()),
                 );
-                ctx.app.crypto.input.signature = if signature.is_empty() { None } else { Some(signature) };
+                ctx.app.crypto.input.signature = if signature.is_empty() {
+                    None
+                } else {
+                    Some(signature)
+                };
             }
         }
     }
@@ -255,17 +276,23 @@ impl CryptographyPanel {
     fn render_process_button(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
         ui.add_space(SPACE);
         ui.horizontal(|ui| {
-            if ui.add(Button::new("Process").min_size([120.0, 30.0].into())).clicked() {
+            if ui
+                .add(Button::new("Process").min_size([120.0, 30.0].into()))
+                .clicked()
+            {
                 ctx.app.crypto.clear_output();
                 if let Err(e) = ctx.app.crypto.process() {
                     // Error is already set in the processor
                     eprintln!("Cryptography processing error: {}", e);
                 }
             }
-            
+
             ui.add_space(SPACE);
-            
-            if ui.add(Button::new("Clear").min_size([80.0, 30.0].into())).clicked() {
+
+            if ui
+                .add(Button::new("Clear").min_size([80.0, 30.0].into()))
+                .clicked()
+            {
                 ctx.app.crypto.input.input_text.clear();
                 ctx.app.crypto.clear_output();
             }
@@ -289,17 +316,17 @@ impl UiPanel for CryptographyPanel {
                     // Algorithm and operation selection
                     self.render_algorithm_selection(ctx, ui);
                     ui.add_space(HALF_SPACE);
-                    
+
                     self.render_operation_selection(ctx, ui);
                     ui.add_space(HALF_SPACE);
-                    
+
                     self.render_mode_selection(ctx, ui);
                     ui.add_space(SPACE);
-                    
+
                     // Key inputs
                     self.render_key_inputs(ctx, ui);
                     ui.add_space(SPACE);
-                    
+
                     // Input/Output
                     let input_label = match ctx.app.crypto.input.operation {
                         CryptoOperation::Encrypt => "Plaintext",
@@ -307,21 +334,21 @@ impl UiPanel for CryptographyPanel {
                         CryptoOperation::Sign => "Message to sign",
                         CryptoOperation::Verify => "Original message",
                     };
-                    
+
                     let output_label = match ctx.app.crypto.input.operation {
                         CryptoOperation::Encrypt => "Ciphertext (hex)",
                         CryptoOperation::Decrypt => "Plaintext",
                         CryptoOperation::Sign => "Signature (hex)",
                         CryptoOperation::Verify => "Verification result",
                     };
-                    
+
                     let input_hint = match ctx.app.crypto.input.operation {
                         CryptoOperation::Decrypt => "Enter hex-encoded ciphertext",
                         CryptoOperation::Sign => "Enter message to sign",
                         CryptoOperation::Verify => "Enter original message that was signed",
                         _ => "Enter text to encrypt",
                     };
-                    
+
                     InputOutputBox::new(input_label, output_label)
                         .with_input_hint(input_hint)
                         .render(
@@ -329,13 +356,12 @@ impl UiPanel for CryptographyPanel {
                             &mut ctx.app.crypto.output,
                             ui,
                         );
-                    
+
                     self.render_process_button(ctx, ui);
                     self.render_error_display(ctx, ui);
-                    
+
                     ui.add_space(DOUBLE_SPACE);
                 });
             });
     }
 }
-
