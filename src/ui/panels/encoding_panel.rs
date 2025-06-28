@@ -7,7 +7,7 @@ use crate::{
         traits::UiPanel,
     },
 };
-use eframe::egui::{CursorIcon, ScrollArea, Ui};
+use eframe::egui::{Align, CursorIcon, Layout, Resize, ScrollArea, Ui};
 
 pub struct EncodingPanel;
 
@@ -43,27 +43,36 @@ impl EncodingPanel {
             ui.add_space(SPACE);
             self.render_action_buttons(ctx, ui);
             ui.add_space(HALF_SPACE);
-            self.render_output_section(ctx, ui);
+            self.render_encoded_section(ctx, ui);
         });
     }
 
     fn render_input_section(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
-        ui.vertical(|ui| {
-            ui.label("Decoded Input/Output");
-            let available_height = ui.available_height() * 0.35;
+        Resize::default().id_salt("decoded_section").show(ui, |ui| {
+            ui.set_max_height(ui.available_height() * 1.0);
+            ui.label("Decoded input/output");
+            ui.add_space(HALF_SPACE);
             ScrollArea::vertical()
-                .id_salt("input_text")
-                .max_height(available_height)
+                .id_salt("decoded_text")
                 .stick_to_bottom(false)
+                .drag_to_scroll(false)
                 .show(ui, |ui| {
-                    let response = ui.text_edit_multiline(&mut ctx.app.encoding.input);
+                    ui.with_layout(
+                        Layout::top_down(Align::Min)
+                            .with_main_justify(true)
+                            .with_cross_justify(true),
+                        |ui| {
+                            let response =
+                                ui.text_edit_multiline(&mut ctx.app.encoding.decoded_text);
 
-                    // Trigger live encoding if enabled and input changed
-                    if ctx.app.encoding.live_conversion && response.changed() {
-                        if let Err(e) = ctx.app.encoding.encode() {
-                            append_global_error(e);
-                        }
-                    }
+                            // Trigger live encoding if enabled and input changed
+                            if ctx.app.encoding.live_conversion && response.changed() {
+                                if let Err(e) = ctx.app.encoding.encode() {
+                                    append_global_error(e);
+                                }
+                            }
+                        },
+                    )
                 });
         });
     }
@@ -190,34 +199,33 @@ impl EncodingPanel {
         });
     }
 
-    fn render_output_section(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
-        ui.vertical(|ui| {
-            ui.label("Encoded Input/Output");
-            let available_height = ui.available_height() * 0.8;
+    fn render_encoded_section(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
+        Resize::default().id_salt("encoded_section").show(ui, |ui| {
+            ui.set_max_height(ui.available_height() * 1.0);
+            ui.label("Encoded input/output");
+            ui.add_space(HALF_SPACE);
             ScrollArea::vertical()
-                .id_salt("output_text")
-                .max_height(available_height)
+                .id_salt("encoded_text")
                 .stick_to_bottom(false)
+                .drag_to_scroll(false)
                 .show(ui, |ui| {
-                    let response = ui.text_edit_multiline(&mut ctx.app.encoding.output);
+                    ui.with_layout(
+                        Layout::top_down(Align::Min)
+                            .with_main_justify(true)
+                            .with_cross_justify(true),
+                        |ui| {
+                            let response =
+                                ui.text_edit_multiline(&mut ctx.app.encoding.encoded_text);
 
-                    // Trigger live decoding if enabled and output changed
-                    if ctx.app.encoding.live_conversion && response.changed() {
-                        // Store the encoded text that user just typed
-                        let encoded_text = ctx.app.encoding.output.clone();
-                        // Temporarily move encoded text to input for decoding process
-                        ctx.app.encoding.input = encoded_text.clone();
-                        // Decode - this will put the decoded result in output
-                        if let Ok(()) = ctx.app.encoding.decode() {
-                            // Move the decoded result to input field
-                            ctx.app.encoding.input = ctx.app.encoding.output.clone();
-                            // Restore the encoded text back to output field
-                            ctx.app.encoding.output = encoded_text;
-                        } else {
-                            // If decoding failed, restore the encoded text to output
-                            ctx.app.encoding.output = encoded_text;
-                        }
-                    }
+                            //TODO: Handle error gracefully
+                            if ctx.app.encoding.live_conversion && response.changed() {
+                                if let Err(e) = ctx.app.encoding.decode() {
+                                    ctx.app.encoding.decoded_text =
+                                        "Malformed input : ".to_string() + &e.to_string();
+                                }
+                            }
+                        },
+                    )
                 });
         });
     }

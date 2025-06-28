@@ -1,6 +1,6 @@
-use eframe::egui::{ScrollArea, TextEdit, Ui};
+use super::{HALF_SPACE, SPACE};
 use crate::context::FrameCtx;
-use super::{SPACE, HALF_SPACE};
+use eframe::egui::{Resize, ScrollArea, TextEdit, Ui};
 
 pub struct InputOutputBox {
     input_label: String,
@@ -43,49 +43,47 @@ impl InputOutputBox {
         self
     }
 
-    pub fn render(
-        &self,
-        input_text: &mut String,
-        output_text: &mut String,
-        ui: &mut Ui,
-    ) {
-        ui.vertical(|ui| {
-            // Input section
-            ui.label(&self.input_label);
-            ui.add_space(HALF_SPACE);
-            
-            let mut input_edit = TextEdit::multiline(input_text)
-                .desired_rows(self.input_rows)
-                .desired_width(ui.available_width());
-            
-            if let Some(hint) = &self.input_hint {
-                input_edit = input_edit.hint_text(hint);
-            }
-            
-            ui.add(input_edit);
-            
-            ui.add_space(SPACE);
-            
-            // Output section
-            ui.label(&self.output_label);
-            ui.add_space(HALF_SPACE);
-            
-            ScrollArea::vertical()
-                .auto_shrink([false, false])
-                .max_height(200.0)
-                .show(ui, |ui| {
-                    let mut output_edit = TextEdit::multiline(output_text)
-                        .desired_rows(self.output_rows)
-                        .desired_width(ui.available_width())
-                        .interactive(false);
-                    
-                    if let Some(hint) = &self.output_hint {
-                        output_edit = output_edit.hint_text(hint);
+    pub fn render(&self, input_text: &mut String, output_text: &mut String, ui: &mut Ui) {
+        Resize::default()
+            .id_salt("input_output_box")
+            .show(ui, |ui| {
+                ui.vertical(|ui| {
+                    // Input section
+                    ui.label(&self.input_label);
+                    ui.add_space(HALF_SPACE);
+
+                    let mut input_edit = TextEdit::multiline(input_text)
+                        .desired_rows(self.input_rows)
+                        .desired_width(ui.available_width());
+
+                    if let Some(hint) = &self.input_hint {
+                        input_edit = input_edit.hint_text(hint);
                     }
-                    
-                    ui.add(output_edit);
+
+                    ui.add(input_edit);
+
+                    ui.add_space(SPACE);
+
+                    // Output section
+                    ui.label(&self.output_label);
+                    ui.add_space(HALF_SPACE);
+
+                    ScrollArea::vertical()
+                        .auto_shrink([false, false])
+                        .max_height(200.0)
+                        .show(ui, |ui| {
+                            let mut output_edit = TextEdit::multiline(output_text)
+                                .desired_rows(self.output_rows)
+                                .desired_width(ui.available_width())
+                                .code_editor();
+
+                            if let Some(hint) = &self.output_hint {
+                                output_edit = output_edit.hint_text(hint);
+                            }
+
+                            ui.add(output_edit);
+                        });
                 });
-        });
+            });
     }
 }
-

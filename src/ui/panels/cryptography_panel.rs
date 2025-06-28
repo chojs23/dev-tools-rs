@@ -181,6 +181,12 @@ impl CryptographyPanel {
                     CryptoAlgorithm::DES | CryptoAlgorithm::TripleDES => {
                         "8 bytes characters (16 hex characters)"
                     }
+                    CryptoAlgorithm::AES => "32 hex characters (16 bytes)",
+                    CryptoAlgorithm::DES | CryptoAlgorithm::TripleDES => "16 hex characters (8 bytes)",
+                    CryptoAlgorithm::AES => "32 hex characters (16 bytes)",
+                    CryptoAlgorithm::DES | CryptoAlgorithm::TripleDES => {
+                        "16 hex characters (8 bytes)"
+                    }
                     _ => "",
                 };
 

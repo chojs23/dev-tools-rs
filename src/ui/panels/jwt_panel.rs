@@ -56,6 +56,7 @@ impl JwtPanel {
         Resize::default()
             .id_salt("jwt_encoded_container")
             .show(ui, |ui| {
+                ui.set_max_height(ui.available_height() * 1.0);
                 ui.label("Encoded input/output");
                 ui.add_space(HALF_SPACE);
                 ScrollArea::vertical()
@@ -63,8 +64,6 @@ impl JwtPanel {
                     .stick_to_bottom(false)
                     .drag_to_scroll(false)
                     .show(ui, |ui| {
-                        ui.set_max_height(ui.available_height() * 0.9);
-                        ui.set_max_width(ui.available_width() * 1.0);
                         ui.with_layout(
                             Layout::top_down(Align::Min)
                                 .with_main_justify(true)
@@ -85,8 +84,6 @@ impl JwtPanel {
                             },
                         )
                     });
-
-                ui.add_space(HALF_SPACE);
             });
     }
 
@@ -197,6 +194,7 @@ impl JwtPanel {
         Resize::default()
             .id_salt("jwt_decoded_container")
             .show(ui, |ui| {
+                ui.set_max_height(ui.available_height() * 1.0);
                 ui.label("Decoded input/output");
                 ui.add_space(HALF_SPACE);
                 ScrollArea::vertical()
@@ -204,8 +202,6 @@ impl JwtPanel {
                     .stick_to_bottom(false)
                     .drag_to_scroll(false)
                     .show(ui, |ui| {
-                        ui.set_max_height(ui.available_height() * 0.9);
-                        ui.set_max_width(ui.available_width() * 1.0);
                         ui.with_layout(
                             Layout::top_down(Align::Min)
                                 .with_main_justify(true)
@@ -221,8 +217,6 @@ impl JwtPanel {
                             },
                         )
                     });
-
-                ui.add_space(HALF_SPACE);
             });
     }
 
