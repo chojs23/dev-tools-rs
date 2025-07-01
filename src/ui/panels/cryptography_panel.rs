@@ -2,7 +2,9 @@ use eframe::egui::{Button, Color32, ComboBox, Resize, ScrollArea, TextEdit, Ui};
 
 use crate::{
     context::FrameCtx,
-    core::crypto::{symmetric::aes::AesKeySize, CipherMode, CryptoAlgorithm, CryptoOperation},
+    core::crypto::{
+        symmetric::aes::AesKeySize, CipherMode, CryptoAlgorithm, CryptoOperation, OutputEncoding,
+    },
     ui::{
         components::{input_output_box::InputOutputBox, DOUBLE_SPACE, HALF_SPACE, SPACE},
         traits::UiPanel,
@@ -131,7 +133,8 @@ impl CryptographyPanel {
                 if matches!(ctx.app.crypto.input.algorithm, CryptoAlgorithm::AES) {
                     ui.add_space(SPACE);
                     ui.label("Key Size:");
-                    let current_key_size = ctx.app.crypto.input.key_size.unwrap_or(AesKeySize::Aes256);
+                    let current_key_size =
+                        ctx.app.crypto.input.key_size.unwrap_or(AesKeySize::Aes256);
                     ComboBox::from_id_salt("aes_key_size")
                         .selected_text(current_key_size.to_string())
                         .show_ui(ui, |ui| {
@@ -151,6 +154,27 @@ impl CryptographyPanel {
                                 AesKeySize::Aes256.to_string(),
                             );
                         });
+                }
+            });
+        }
+    }
+
+    fn render_encoding_selection(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
+        // Only show encoding selection for encrypt and sign operations
+        if matches!(
+            ctx.app.crypto.input.operation,
+            CryptoOperation::Encrypt | CryptoOperation::Sign
+        ) {
+            ui.horizontal(|ui| {
+                ui.label("Output Format:");
+                ui.add_space(SPACE);
+
+                for encoding in OutputEncoding::variants() {
+                    ui.radio_value(
+                        &mut ctx.app.crypto.input.encoding,
+                        *encoding,
+                        encoding.to_string(),
+                    );
                 }
             });
         }
@@ -400,6 +424,9 @@ impl UiPanel for CryptographyPanel {
                     ui.add_space(HALF_SPACE);
 
                     self.render_mode_selection(ctx, ui);
+                    ui.add_space(HALF_SPACE);
+
+                    self.render_encoding_selection(ctx, ui);
                     ui.add_space(SPACE);
 
                     // Key inputs
@@ -409,20 +436,27 @@ impl UiPanel for CryptographyPanel {
                     // Input/Output
                     let input_label = match ctx.app.crypto.input.operation {
                         CryptoOperation::Encrypt => "Plaintext",
-                        CryptoOperation::Decrypt => "Ciphertext (hex)",
+                        //TODO: select input format for decryption
+                        CryptoOperation::Decrypt => "Ciphertext (hex or base64)",
                         CryptoOperation::Sign => "Message to sign",
                         CryptoOperation::Verify => "Original message",
                     };
 
                     let output_label = match ctx.app.crypto.input.operation {
-                        CryptoOperation::Encrypt => "Ciphertext (hex)",
+                        CryptoOperation::Encrypt => match ctx.app.crypto.input.encoding {
+                            OutputEncoding::Hex => "Ciphertext (hex)",
+                            OutputEncoding::Base64 => "Ciphertext (base64)",
+                        },
                         CryptoOperation::Decrypt => "Plaintext",
-                        CryptoOperation::Sign => "Signature (hex)",
+                        CryptoOperation::Sign => match ctx.app.crypto.input.encoding {
+                            OutputEncoding::Hex => "Signature (hex)",
+                            OutputEncoding::Base64 => "Signature (base64)",
+                        },
                         CryptoOperation::Verify => "Verification result",
                     };
 
                     let input_hint = match ctx.app.crypto.input.operation {
-                        CryptoOperation::Decrypt => "Enter hex-encoded ciphertext",
+                        CryptoOperation::Decrypt => "Enter ciphertext (hex or base64 format)",
                         CryptoOperation::Sign => "Enter message to sign",
                         CryptoOperation::Verify => "Enter original message that was signed",
                         _ => "Enter text to encrypt",

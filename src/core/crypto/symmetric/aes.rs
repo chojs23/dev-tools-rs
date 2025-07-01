@@ -1,5 +1,6 @@
 use aes::{Aes128, Aes192, Aes256};
 use anyhow::{anyhow, Result};
+use base64::{engine::general_purpose, Engine as _};
 use cbc::{Decryptor, Encryptor};
 use cipher::block_padding::Pkcs7;
 use cipher::{BlockDecryptMut, BlockEncryptMut, KeyInit, KeyIvInit};
@@ -7,7 +8,7 @@ use ecb::{Decryptor as EcbDecryptor, Encryptor as EcbEncryptor};
 use hex;
 use serde::{Deserialize, Serialize};
 
-use crate::core::crypto::CipherMode;
+use crate::core::crypto::{CipherMode, OutputEncoding};
 
 type Aes128CbcEnc = Encryptor<Aes128>;
 type Aes128CbcDec = Decryptor<Aes128>;
@@ -182,6 +183,7 @@ pub fn aes_encrypt(
     key_size: AesKeySize,
     mode: CipherMode,
     iv: Option<&str>,
+    encoding: OutputEncoding,
 ) -> Result<String> {
     validate_key_size(key, key_size)?;
 
@@ -209,7 +211,11 @@ pub fn aes_encrypt(
                 AesKeySize::Aes192 => encrypt_aes_192_cbc(plaintext_bytes, key_bytes, iv_bytes)?,
                 AesKeySize::Aes256 => encrypt_aes_256_cbc(plaintext_bytes, key_bytes, iv_bytes)?,
             };
-            Ok(hex::encode(ct))
+
+            match encoding {
+                OutputEncoding::Hex => Ok(hex::encode(ct)),
+                OutputEncoding::Base64 => Ok(general_purpose::STANDARD.encode(ct)),
+            }
         }
         CipherMode::ECB => {
             let ct = match key_size {
@@ -218,7 +224,10 @@ pub fn aes_encrypt(
                 AesKeySize::Aes256 => encrypt_aes_256_ecb(plaintext_bytes, key_bytes)?,
             };
 
-            Ok(hex::encode(ct))
+            match encoding {
+                OutputEncoding::Hex => Ok(hex::encode(ct)),
+                OutputEncoding::Base64 => Ok(general_purpose::STANDARD.encode(ct)),
+            }
         }
     }
 }
@@ -233,8 +242,11 @@ pub fn aes_decrypt(
     validate_key_size(key, key_size)?;
 
     let key_bytes = key.as_bytes();
-    let ciphertext_bytes =
-        hex::decode(ciphertext).map_err(|_| anyhow!("Invalid hex ciphertext format"))?;
+
+    // Try to decode as hex first, then base64
+    let ciphertext_bytes = hex::decode(ciphertext)
+        .or_else(|_| general_purpose::STANDARD.decode(ciphertext))
+        .map_err(|_| anyhow!("Invalid ciphertext format - must be valid hex or base64"))?;
 
     match mode {
         CipherMode::CBC => {

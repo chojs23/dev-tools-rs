@@ -114,6 +114,33 @@ impl fmt::Display for CryptoOperation {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum OutputEncoding {
+    Hex,
+    Base64,
+}
+
+impl fmt::Display for OutputEncoding {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            OutputEncoding::Hex => write!(f, "Hex"),
+            OutputEncoding::Base64 => write!(f, "Base64"),
+        }
+    }
+}
+
+impl OutputEncoding {
+    pub fn variants() -> &'static [OutputEncoding] {
+        &[OutputEncoding::Hex, OutputEncoding::Base64]
+    }
+}
+
+impl Default for OutputEncoding {
+    fn default() -> Self {
+        OutputEncoding::Hex
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CryptoInput {
     pub algorithm: CryptoAlgorithm,
@@ -125,7 +152,8 @@ pub struct CryptoInput {
     pub iv: Option<String>,           // Initialization Vector for CBC mode
     pub public_key: Option<String>,   // For asymmetric algorithms
     pub private_key: Option<String>,  // For asymmetric algorithms
-    pub signature: Option<String>,    // For verification
+    pub signature: Option<String>,
+    pub encoding: OutputEncoding,
 }
 
 impl Default for CryptoInput {
@@ -141,6 +169,7 @@ impl Default for CryptoInput {
             public_key: None,
             private_key: None,
             signature: None,
+            encoding: OutputEncoding::default(),
         }
     }
 }
@@ -193,6 +222,7 @@ impl CryptographyProcessor {
                 key_size,
                 mode,
                 self.input.iv.as_deref(),
+                self.input.encoding,
             ),
             CryptoOperation::Decrypt => aes_decrypt(
                 &self.input.input_text,
