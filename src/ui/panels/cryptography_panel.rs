@@ -126,6 +126,32 @@ impl CryptographyPanel {
                             }
                         }
                     });
+
+                // Add AES key size selection for AES algorithm
+                if matches!(ctx.app.crypto.input.algorithm, CryptoAlgorithm::AES) {
+                    ui.add_space(SPACE);
+                    ui.label("Key Size:");
+                    let current_key_size = ctx.app.crypto.input.key_size.unwrap_or(AesKeySize::Aes256);
+                    ComboBox::from_id_salt("aes_key_size")
+                        .selected_text(current_key_size.to_string())
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(
+                                &mut ctx.app.crypto.input.key_size,
+                                Some(AesKeySize::Aes128),
+                                AesKeySize::Aes128.to_string(),
+                            );
+                            ui.selectable_value(
+                                &mut ctx.app.crypto.input.key_size,
+                                Some(AesKeySize::Aes192),
+                                AesKeySize::Aes192.to_string(),
+                            );
+                            ui.selectable_value(
+                                &mut ctx.app.crypto.input.key_size,
+                                Some(AesKeySize::Aes256),
+                                AesKeySize::Aes256.to_string(),
+                            );
+                        });
+                }
             });
         }
     }
@@ -188,14 +214,6 @@ impl CryptographyPanel {
                 });
 
                 let iv_hint = match ctx.app.crypto.input.algorithm {
-                    CryptoAlgorithm::AES => "16 bytes characters (32 hex characters)",
-                    CryptoAlgorithm::DES | CryptoAlgorithm::TripleDES => {
-                        "8 bytes characters (16 hex characters)"
-                    }
-                    CryptoAlgorithm::AES => "32 hex characters (16 bytes)",
-                    CryptoAlgorithm::DES | CryptoAlgorithm::TripleDES => {
-                        "16 hex characters (8 bytes)"
-                    }
                     CryptoAlgorithm::AES => "32 hex characters (16 bytes)",
                     CryptoAlgorithm::DES | CryptoAlgorithm::TripleDES => {
                         "16 hex characters (8 bytes)"

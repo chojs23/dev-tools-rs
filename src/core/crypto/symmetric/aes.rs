@@ -22,11 +22,21 @@ type Aes192EcbDec = EcbDecryptor<Aes192>;
 type Aes256EcbEnc = EcbEncryptor<Aes256>;
 type Aes256EcbDec = EcbDecryptor<Aes256>;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum AesKeySize {
     Aes128,
     Aes192,
     Aes256,
+}
+
+impl std::fmt::Display for AesKeySize {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AesKeySize::Aes128 => write!(f, "AES-128"),
+            AesKeySize::Aes192 => write!(f, "AES-192"),
+            AesKeySize::Aes256 => write!(f, "AES-256"),
+        }
+    }
 }
 
 fn validate_key_size(key: &str, key_size: AesKeySize) -> Result<()> {
