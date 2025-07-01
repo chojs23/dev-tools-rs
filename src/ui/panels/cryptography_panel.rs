@@ -1,4 +1,4 @@
-use eframe::egui::{Button, Color32, ComboBox, ScrollArea, TextEdit, Ui};
+use eframe::egui::{Button, Color32, ComboBox, Resize, ScrollArea, TextEdit, Ui};
 
 use crate::{
     context::FrameCtx,
@@ -20,7 +20,7 @@ impl CryptographyPanel {
     fn render_algorithm_selection(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
         ui.horizontal(|ui| {
             ui.label("Algorithm:");
-            ComboBox::from_id_source("crypto_algorithm")
+            ComboBox::from_id_salt("crypto_algorithm")
                 .selected_text(ctx.app.crypto.input.algorithm.to_string())
                 .show_ui(ui, |ui| {
                     for algorithm in CryptoAlgorithm::variants() {
@@ -39,7 +39,7 @@ impl CryptographyPanel {
             ui.label("Operation:");
             match ctx.app.crypto.input.algorithm {
                 CryptoAlgorithm::ECDSA => {
-                    ComboBox::from_id_source("crypto_operation")
+                    ComboBox::from_id_salt("crypto_operation")
                         .selected_text(ctx.app.crypto.input.operation.to_string())
                         .show_ui(ui, |ui| {
                             ui.selectable_value(
@@ -55,7 +55,7 @@ impl CryptographyPanel {
                         });
                 }
                 CryptoAlgorithm::RSA => {
-                    ComboBox::from_id_source("crypto_operation")
+                    ComboBox::from_id_salt("crypto_operation")
                         .selected_text(ctx.app.crypto.input.operation.to_string())
                         .show_ui(ui, |ui| {
                             ui.selectable_value(
@@ -81,7 +81,7 @@ impl CryptographyPanel {
                         });
                 }
                 _ => {
-                    ComboBox::from_id_source("crypto_operation")
+                    ComboBox::from_id_salt("crypto_operation")
                         .selected_text(ctx.app.crypto.input.operation.to_string())
                         .show_ui(ui, |ui| {
                             ui.selectable_value(
@@ -107,7 +107,7 @@ impl CryptographyPanel {
             ui.horizontal(|ui| {
                 ui.label("Mode:");
                 let current_mode = ctx.app.crypto.input.mode.unwrap_or(CipherMode::CBC);
-                ComboBox::from_id_source("crypto_mode")
+                ComboBox::from_id_salt("crypto_mode")
                     .selected_text(current_mode.to_string())
                     .show_ui(ui, |ui| {
                         for mode in CipherMode::variants() {
@@ -157,11 +157,22 @@ impl CryptographyPanel {
                 _ => "",
             };
 
-            ui.add(
-                TextEdit::multiline(&mut ctx.app.crypto.input.key)
-                    .hint_text(key_hint)
-                    .desired_width(ui.available_width()),
-            );
+            Resize::default()
+                .id_salt("key_input")
+                .default_width(200.0)
+                .max_height(SPACE)
+                .max_width(200.0)
+                .show(ui, |ui| {
+                    ScrollArea::horizontal()
+                        .id_salt("key_input_scroll")
+                        .max_height(ui.available_height() * 0.1)
+                        .show(ui, |ui| {
+                            ui.add(
+                                TextEdit::multiline(&mut ctx.app.crypto.input.key)
+                                    .hint_text(key_hint),
+                            );
+                        });
+                });
 
             // IV for CBC mode
             if ctx.app.crypto.input.mode == Some(CipherMode::CBC) {
@@ -182,7 +193,9 @@ impl CryptographyPanel {
                         "8 bytes characters (16 hex characters)"
                     }
                     CryptoAlgorithm::AES => "32 hex characters (16 bytes)",
-                    CryptoAlgorithm::DES | CryptoAlgorithm::TripleDES => "16 hex characters (8 bytes)",
+                    CryptoAlgorithm::DES | CryptoAlgorithm::TripleDES => {
+                        "16 hex characters (8 bytes)"
+                    }
                     CryptoAlgorithm::AES => "32 hex characters (16 bytes)",
                     CryptoAlgorithm::DES | CryptoAlgorithm::TripleDES => {
                         "16 hex characters (8 bytes)"
@@ -190,13 +203,22 @@ impl CryptographyPanel {
                     _ => "",
                 };
 
-                let mut iv = ctx.app.crypto.input.iv.clone().unwrap_or_default();
-                ui.add(
-                    TextEdit::multiline(&mut iv)
-                        .hint_text(iv_hint)
-                        .desired_width(ui.available_width()),
-                );
-                ctx.app.crypto.input.iv = if iv.is_empty() { None } else { Some(iv) };
+                Resize::default()
+                    .id_salt("iv_input")
+                    .default_width(200.0)
+                    .max_height(SPACE)
+                    .max_width(200.0)
+                    .show(ui, |ui| {
+                        ScrollArea::horizontal()
+                            .id_salt("iv_input_scroll")
+                            .max_height(ui.available_height() * 0.1)
+                            .show(ui, |ui| {
+                                let mut iv = ctx.app.crypto.input.iv.clone().unwrap_or_default();
+                                ui.add(TextEdit::multiline(&mut iv).hint_text(iv_hint));
+                                ctx.app.crypto.input.iv =
+                                    if iv.is_empty() { None } else { Some(iv) };
+                            });
+                    });
             }
         } else {
             // Asymmetric key inputs
@@ -221,12 +243,25 @@ impl CryptographyPanel {
                         _ => "",
                     };
 
-                    ui.add(
-                        TextEdit::multiline(&mut public_key)
-                            .hint_text(hint)
-                            .desired_rows(6)
-                            .desired_width(ui.available_width()),
-                    );
+                    Resize::default()
+                        .id_salt("public_key_input")
+                        .default_width(200.0)
+                        .max_height(SPACE)
+                        .max_width(200.0)
+                        .show(ui, |ui| {
+                            ScrollArea::horizontal()
+                                .id_salt("public_key_input_scroll")
+                                .max_height(ui.available_height() * 0.1)
+                                .show(ui, |ui| {
+                                    ui.add(
+                                        TextEdit::multiline(&mut public_key)
+                                            .hint_text(hint)
+                                            .desired_rows(6)
+                                            .desired_width(ui.available_width()),
+                                    );
+                                });
+                        });
+
                     ctx.app.crypto.input.public_key = if public_key.is_empty() {
                         None
                     } else {
@@ -253,12 +288,25 @@ impl CryptographyPanel {
                         _ => "",
                     };
 
-                    ui.add(
-                        TextEdit::multiline(&mut private_key)
-                            .hint_text(hint)
-                            .desired_rows(6)
-                            .desired_width(ui.available_width()),
-                    );
+                    Resize::default()
+                        .id_salt("private_key_input")
+                        .default_width(200.0)
+                        .max_height(SPACE)
+                        .max_width(200.0)
+                        .show(ui, |ui| {
+                            ScrollArea::horizontal()
+                                .id_salt("private_key_input_scroll")
+                                .max_height(ui.available_height() * 0.1)
+                                .show(ui, |ui| {
+                                    ui.add(
+                                        TextEdit::multiline(&mut private_key)
+                                            .hint_text(hint)
+                                            .desired_rows(6)
+                                            .desired_width(ui.available_width()),
+                                    );
+                                });
+                        });
+
                     ctx.app.crypto.input.private_key = if private_key.is_empty() {
                         None
                     } else {

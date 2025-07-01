@@ -1,6 +1,5 @@
-use super::{HALF_SPACE, SPACE};
-use crate::context::FrameCtx;
-use eframe::egui::{Resize, ScrollArea, TextEdit, Ui};
+use super::SPACE;
+use eframe::egui::{Align, Layout, Resize, ScrollArea, TextEdit, Ui};
 
 pub struct InputOutputBox {
     input_label: String,
@@ -44,46 +43,64 @@ impl InputOutputBox {
     }
 
     pub fn render(&self, input_text: &mut String, output_text: &mut String, ui: &mut Ui) {
+        ui.add_space(SPACE);
+        ui.label(&self.input_label);
         Resize::default()
-            .id_salt("input_output_box")
+            .id_salt("input_box")
+            .default_height(ui.available_height() * 0.5)
             .show(ui, |ui| {
-                ui.vertical(|ui| {
-                    // Input section
-                    ui.label(&self.input_label);
-                    ui.add_space(HALF_SPACE);
+                ui.set_max_height(ui.available_height() * 1.0);
+                ScrollArea::vertical()
+                    .id_salt("input_scroll")
+                    .show(ui, |ui| {
+                        ui.set_max_height(ui.available_height() * 1.0);
+                        ui.set_max_width(ui.available_width() * 1.0);
 
-                    let mut input_edit = TextEdit::multiline(input_text)
-                        .desired_rows(self.input_rows)
-                        .desired_width(ui.available_width());
+                        ui.with_layout(
+                            Layout::top_down(Align::Min)
+                                .with_main_justify(true)
+                                .with_cross_justify(true),
+                            |ui| {
+                                let mut input_edit = TextEdit::multiline(input_text)
+                                    .desired_rows(self.input_rows)
+                                    .desired_width(ui.available_width());
 
-                    if let Some(hint) = &self.input_hint {
-                        input_edit = input_edit.hint_text(hint);
-                    }
+                                if let Some(hint) = &self.input_hint {
+                                    input_edit = input_edit.hint_text(hint);
+                                }
 
-                    ui.add(input_edit);
+                                ui.add(input_edit)
+                            },
+                        );
+                    });
+            });
 
-                    ui.add_space(SPACE);
+        ui.add_space(SPACE);
+        ui.label(&self.output_label);
 
-                    // Output section
-                    ui.label(&self.output_label);
-                    ui.add_space(HALF_SPACE);
+        Resize::default()
+            .id_salt("output_box")
+            .default_height(ui.available_height() * 0.5)
+            .show(ui, |ui| {
+                ui.set_max_height(ui.available_height() * 1.0);
+                ScrollArea::vertical()
+                    .id_salt("output_scroll")
+                    .stick_to_bottom(false)
+                    .drag_to_scroll(false)
+                    .show(ui, |ui| {
+                        ui.set_max_height(ui.available_height() * 1.0);
+                        ui.set_max_width(ui.available_width() * 1.0);
+                        let mut output_edit = TextEdit::multiline(output_text)
+                            .desired_rows(self.output_rows)
+                            .desired_width(ui.available_width())
+                            .code_editor();
 
-                    ScrollArea::vertical()
-                        .auto_shrink([false, false])
-                        .max_height(200.0)
-                        .show(ui, |ui| {
-                            let mut output_edit = TextEdit::multiline(output_text)
-                                .desired_rows(self.output_rows)
-                                .desired_width(ui.available_width())
-                                .code_editor();
+                        if let Some(hint) = &self.output_hint {
+                            output_edit = output_edit.hint_text(hint);
+                        }
 
-                            if let Some(hint) = &self.output_hint {
-                                output_edit = output_edit.hint_text(hint);
-                            }
-
-                            ui.add(output_edit);
-                        });
-                });
+                        ui.add(output_edit);
+                    });
             });
     }
 }
