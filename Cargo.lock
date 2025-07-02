@@ -1008,7 +1008,6 @@ dependencies = [
  "p256",
  "rand 0.8.5",
  "rand_core 0.9.3",
- "rc4",
  "regex",
  "rsa",
  "serde",
@@ -3069,15 +3068,6 @@ name = "raw-window-handle"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "20675572f6f24e9e76ef639bc5552774ed45f1c30e2951e1e99c59888861c539"
-
-[[package]]
-name = "rc4"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f1256e23efe6097f27aa82d6ca6889361c001586ae0f6917cbad072f05eb275"
-dependencies = [
- "cipher",
-]
 
 [[package]]
 name = "redox_syscall"

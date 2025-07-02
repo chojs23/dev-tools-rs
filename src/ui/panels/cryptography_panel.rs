@@ -103,9 +103,7 @@ impl CryptographyPanel {
     }
 
     fn render_mode_selection(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
-        if ctx.app.crypto.input.algorithm.is_symmetric()
-            && !matches!(ctx.app.crypto.input.algorithm, CryptoAlgorithm::RC4)
-        {
+        if ctx.app.crypto.input.algorithm.is_symmetric() {
             ui.horizontal(|ui| {
                 ui.label("Mode:");
                 let current_mode = ctx.app.crypto.input.mode.unwrap_or(CipherMode::CBC);
@@ -164,6 +162,9 @@ impl CryptographyPanel {
         if matches!(
             ctx.app.crypto.input.operation,
             CryptoOperation::Encrypt | CryptoOperation::Sign
+        ) && matches!(
+            ctx.app.crypto.input.algorithm,
+            CryptoAlgorithm::AES | CryptoAlgorithm::DES | CryptoAlgorithm::TripleDES
         ) {
             ui.horizontal(|ui| {
                 ui.label("Output Format:");
@@ -203,7 +204,6 @@ impl CryptographyPanel {
                 },
                 CryptoAlgorithm::DES => "8 bytes characters (16 hex characters)",
                 CryptoAlgorithm::TripleDES => "24 bytes characters (48 hex characters)",
-                CryptoAlgorithm::RC4 => "1-256 bytes characters (2-512 hex characters)",
                 _ => "",
             };
 
@@ -443,9 +443,14 @@ impl UiPanel for CryptographyPanel {
                     };
 
                     let output_label = match ctx.app.crypto.input.operation {
-                        CryptoOperation::Encrypt => match ctx.app.crypto.input.encoding {
-                            OutputEncoding::Hex => "Ciphertext (hex)",
-                            OutputEncoding::Base64 => "Ciphertext (base64)",
+                        CryptoOperation::Encrypt => match ctx.app.crypto.input.algorithm {
+                            CryptoAlgorithm::AES
+                            | CryptoAlgorithm::DES
+                            | CryptoAlgorithm::TripleDES => match ctx.app.crypto.input.encoding {
+                                OutputEncoding::Hex => "Ciphertext (hex)",
+                                OutputEncoding::Base64 => "Ciphertext (base64)",
+                            },
+                            _ => "Ciphertext",
                         },
                         CryptoOperation::Decrypt => "Plaintext",
                         CryptoOperation::Sign => match ctx.app.crypto.input.encoding {

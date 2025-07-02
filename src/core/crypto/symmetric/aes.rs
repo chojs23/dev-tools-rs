@@ -1,14 +1,12 @@
 use aes::{Aes128, Aes192, Aes256};
 use anyhow::{anyhow, Result};
-use base64::{engine::general_purpose, Engine as _};
 use cbc::{Decryptor, Encryptor};
 use cipher::block_padding::Pkcs7;
 use cipher::{BlockDecryptMut, BlockEncryptMut, KeyInit, KeyIvInit};
 use ecb::{Decryptor as EcbDecryptor, Encryptor as EcbEncryptor};
-use hex;
 use serde::{Deserialize, Serialize};
 
-use crate::core::crypto::{CipherMode, OutputEncoding};
+use crate::core::crypto::CipherMode;
 
 type Aes128CbcEnc = Encryptor<Aes128>;
 type Aes128CbcDec = Decryptor<Aes128>;
@@ -183,8 +181,7 @@ pub fn aes_encrypt(
     key_size: AesKeySize,
     mode: CipherMode,
     iv: Option<&str>,
-    encoding: OutputEncoding,
-) -> Result<String> {
+) -> Result<Vec<u8>> {
     validate_key_size(key, key_size)?;
 
     let key_bytes = key.as_bytes();
@@ -206,47 +203,32 @@ pub fn aes_encrypt(
                 &[0u8; 16] // Default IV of zeros if not provided
             };
 
-            let ct = match key_size {
-                AesKeySize::Aes128 => encrypt_aes_128_cbc(plaintext_bytes, key_bytes, iv_bytes)?,
-                AesKeySize::Aes192 => encrypt_aes_192_cbc(plaintext_bytes, key_bytes, iv_bytes)?,
-                AesKeySize::Aes256 => encrypt_aes_256_cbc(plaintext_bytes, key_bytes, iv_bytes)?,
-            };
-
-            match encoding {
-                OutputEncoding::Hex => Ok(hex::encode(ct)),
-                OutputEncoding::Base64 => Ok(general_purpose::STANDARD.encode(ct)),
+            match key_size {
+                AesKeySize::Aes128 => encrypt_aes_128_cbc(plaintext_bytes, key_bytes, iv_bytes),
+                AesKeySize::Aes192 => encrypt_aes_192_cbc(plaintext_bytes, key_bytes, iv_bytes),
+                AesKeySize::Aes256 => encrypt_aes_256_cbc(plaintext_bytes, key_bytes, iv_bytes),
             }
         }
         CipherMode::ECB => {
-            let ct = match key_size {
-                AesKeySize::Aes128 => encrypt_aes_128_ecb(plaintext_bytes, key_bytes)?,
-                AesKeySize::Aes192 => encrypt_aes_192_ecb(plaintext_bytes, key_bytes)?,
-                AesKeySize::Aes256 => encrypt_aes_256_ecb(plaintext_bytes, key_bytes)?,
-            };
-
-            match encoding {
-                OutputEncoding::Hex => Ok(hex::encode(ct)),
-                OutputEncoding::Base64 => Ok(general_purpose::STANDARD.encode(ct)),
+            match key_size {
+                AesKeySize::Aes128 => encrypt_aes_128_ecb(plaintext_bytes, key_bytes),
+                AesKeySize::Aes192 => encrypt_aes_192_ecb(plaintext_bytes, key_bytes),
+                AesKeySize::Aes256 => encrypt_aes_256_ecb(plaintext_bytes, key_bytes),
             }
         }
     }
 }
 
 pub fn aes_decrypt(
-    ciphertext: &str,
+    ciphertext: &[u8],
     key: &str,
     key_size: AesKeySize,
     mode: CipherMode,
     iv: Option<&str>,
-) -> Result<String> {
+) -> Result<Vec<u8>> {
     validate_key_size(key, key_size)?;
 
     let key_bytes = key.as_bytes();
-
-    // Try to decode as hex first, then base64
-    let ciphertext_bytes = hex::decode(ciphertext)
-        .or_else(|_| general_purpose::STANDARD.decode(ciphertext))
-        .map_err(|_| anyhow!("Invalid ciphertext format - must be valid hex or base64"))?;
 
     match mode {
         CipherMode::CBC => {
@@ -263,21 +245,18 @@ pub fn aes_decrypt(
                 &[0u8; 16]
             };
 
-            let pt = match key_size {
-                AesKeySize::Aes128 => decrypt_aes_128_cbc(&ciphertext_bytes, key_bytes, iv_bytes)?,
-                AesKeySize::Aes192 => decrypt_aes_192_cbc(&ciphertext_bytes, key_bytes, iv_bytes)?,
-                AesKeySize::Aes256 => decrypt_aes_256_cbc(&ciphertext_bytes, key_bytes, iv_bytes)?,
-            };
-            String::from_utf8(pt).map_err(|e| anyhow!("Invalid UTF-8 in decrypted text: {}", e))
+            match key_size {
+                AesKeySize::Aes128 => decrypt_aes_128_cbc(ciphertext, key_bytes, iv_bytes),
+                AesKeySize::Aes192 => decrypt_aes_192_cbc(ciphertext, key_bytes, iv_bytes),
+                AesKeySize::Aes256 => decrypt_aes_256_cbc(ciphertext, key_bytes, iv_bytes),
+            }
         }
         CipherMode::ECB => {
-            let pt = match key_size {
-                AesKeySize::Aes128 => decrypt_aes_128_ecb(&ciphertext_bytes, key_bytes)?,
-                AesKeySize::Aes192 => decrypt_aes_192_ecb(&ciphertext_bytes, key_bytes)?,
-                AesKeySize::Aes256 => decrypt_aes_256_ecb(&ciphertext_bytes, key_bytes)?,
-            };
-
-            String::from_utf8(pt).map_err(|e| anyhow!("Invalid UTF-8 in decrypted text: {}", e))
+            match key_size {
+                AesKeySize::Aes128 => decrypt_aes_128_ecb(ciphertext, key_bytes),
+                AesKeySize::Aes192 => decrypt_aes_192_ecb(ciphertext, key_bytes),
+                AesKeySize::Aes256 => decrypt_aes_256_ecb(ciphertext, key_bytes),
+            }
         }
     }
 }

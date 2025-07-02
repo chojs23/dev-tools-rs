@@ -10,13 +10,14 @@ use asymmetric::{
         rsa_verify,
     },
 };
+use base64::{self, Engine};
+use hex;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use symmetric::{
     aes::AesKeySize,
     des::{des_decrypt, des_encrypt},
-    generate_aes_iv, generate_aes_key, generate_rc4_key,
-    rc4::{rc4_decrypt, rc4_encrypt},
+    generate_aes_iv, generate_aes_key,
     tdes::{triple_des_decrypt, triple_des_encrypt},
 };
 
@@ -28,7 +29,6 @@ pub enum CryptoAlgorithm {
     AES,
     DES,
     TripleDES,
-    RC4,
     RSA,
     ECDSA,
 }
@@ -39,7 +39,6 @@ impl fmt::Display for CryptoAlgorithm {
             CryptoAlgorithm::AES => write!(f, "AES"),
             CryptoAlgorithm::DES => write!(f, "DES"),
             CryptoAlgorithm::TripleDES => write!(f, "Triple DES"),
-            CryptoAlgorithm::RC4 => write!(f, "RC4"),
             CryptoAlgorithm::RSA => write!(f, "RSA"),
             CryptoAlgorithm::ECDSA => write!(f, "ECDSA"),
         }
@@ -52,7 +51,6 @@ impl CryptoAlgorithm {
             CryptoAlgorithm::AES,
             CryptoAlgorithm::DES,
             CryptoAlgorithm::TripleDES,
-            CryptoAlgorithm::RC4,
             CryptoAlgorithm::RSA,
             CryptoAlgorithm::ECDSA,
         ]
@@ -61,10 +59,7 @@ impl CryptoAlgorithm {
     pub fn is_symmetric(&self) -> bool {
         matches!(
             self,
-            CryptoAlgorithm::AES
-                | CryptoAlgorithm::DES
-                | CryptoAlgorithm::TripleDES
-                | CryptoAlgorithm::RC4
+            CryptoAlgorithm::AES | CryptoAlgorithm::DES | CryptoAlgorithm::TripleDES
         )
     }
 
@@ -193,7 +188,6 @@ impl CryptographyProcessor {
             CryptoAlgorithm::AES => self.process_aes(),
             CryptoAlgorithm::DES => self.process_des(),
             CryptoAlgorithm::TripleDES => self.process_triple_des(),
-            CryptoAlgorithm::RC4 => self.process_rc4(),
             CryptoAlgorithm::RSA => self.process_rsa(),
             CryptoAlgorithm::ECDSA => self.process_ecdsa(),
         };
@@ -216,21 +210,44 @@ impl CryptographyProcessor {
         let mode = self.input.mode.unwrap_or(CipherMode::CBC);
         let key_size = self.input.key_size.unwrap_or(AesKeySize::Aes128);
         match self.input.operation {
-            CryptoOperation::Encrypt => aes_encrypt(
-                &self.input.input_text,
-                &self.input.key,
-                key_size,
-                mode,
-                self.input.iv.as_deref(),
-                self.input.encoding,
-            ),
-            CryptoOperation::Decrypt => aes_decrypt(
-                &self.input.input_text,
-                &self.input.key,
-                key_size,
-                mode,
-                self.input.iv.as_deref(),
-            ),
+            CryptoOperation::Encrypt => {
+                let encrypted_bytes = aes_encrypt(
+                    &self.input.input_text,
+                    &self.input.key,
+                    key_size,
+                    mode,
+                    self.input.iv.as_deref(),
+                )?;
+
+                // Handle encoding in CryptographyProcessor
+                match self.input.encoding {
+                    OutputEncoding::Hex => Ok(hex::encode(encrypted_bytes)),
+                    OutputEncoding::Base64 => {
+                        Ok(base64::engine::general_purpose::STANDARD.encode(encrypted_bytes))
+                    }
+                }
+            }
+            CryptoOperation::Decrypt => {
+                // Handle decoding in CryptographyProcessor
+                let ciphertext_bytes = hex::decode(&self.input.input_text)
+                    .or_else(|_| {
+                        base64::engine::general_purpose::STANDARD.decode(&self.input.input_text)
+                    })
+                    .map_err(|_| {
+                        anyhow!("Invalid ciphertext format - must be valid hex or base64")
+                    })?;
+
+                let decrypted_bytes = aes_decrypt(
+                    &ciphertext_bytes,
+                    &self.input.key,
+                    key_size,
+                    mode,
+                    self.input.iv.as_deref(),
+                )?;
+
+                String::from_utf8(decrypted_bytes)
+                    .map_err(|e| anyhow!("Invalid UTF-8 in decrypted text: {}", e))
+            }
             _ => Err(anyhow!("Invalid operation for AES")),
         }
     }
@@ -270,14 +287,6 @@ impl CryptographyProcessor {
                 self.input.iv.as_deref(),
             ),
             _ => Err(anyhow!("Invalid operation for Triple DES")),
-        }
-    }
-
-    fn process_rc4(&self) -> Result<String> {
-        match self.input.operation {
-            CryptoOperation::Encrypt => rc4_encrypt(&self.input.input_text, &self.input.key),
-            CryptoOperation::Decrypt => rc4_decrypt(&self.input.input_text, &self.input.key),
-            _ => Err(anyhow!("Invalid operation for RC4")),
         }
     }
 
@@ -368,7 +377,6 @@ impl CryptographyProcessor {
             ),
             CryptoAlgorithm::DES => generate_des_key(),
             CryptoAlgorithm::TripleDES => generate_triple_des_key(),
-            CryptoAlgorithm::RC4 => generate_rc4_key(),
             CryptoAlgorithm::RSA => {
                 let (public_key, private_key) = generate_rsa_keypair()?;
                 self.input.public_key = Some(public_key);
