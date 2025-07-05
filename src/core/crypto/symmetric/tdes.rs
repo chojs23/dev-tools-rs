@@ -17,7 +17,7 @@ type TdesEde3EcbDec = EcbDecryptor<TdesEde3>;
 fn validate_triple_des_key(key: &str) -> Result<()> {
     if key.len() != 24 {
         return Err(anyhow!(
-            "Triple DES requires a 24-byte (48 hex characters) key, got {} characters",
+            "Triple DES requires a 24-byte key, got {} characters",
             key.len()
         ));
     }
@@ -81,7 +81,7 @@ pub fn triple_des_encrypt(
             let iv_bytes: &[u8; 8] = if let Some(iv) = iv {
                 if iv.len() != 8 {
                     return Err(anyhow!(
-                        "Triple DES CBC mode requires an 8-byte (16 hex characters) IV, got {} characters",
+                        "Triple DES CBC mode requires an 8-byte IV, got {} characters",
                         iv.len()
                     ));
                 }

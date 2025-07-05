@@ -7,6 +7,7 @@ use p256::{
     },
     PublicKey, SecretKey,
 };
+use rand::thread_rng;
 use sha2::{Digest, Sha256};
 
 // ECDSA Functions
@@ -52,4 +53,14 @@ pub fn ecdsa_verify(message: &str, signature_hex: &str, public_key_hex: &str) ->
         Ok(()) => Ok(true),
         Err(_) => Ok(false),
     }
+}
+
+pub fn generate_ecdsa_keypair() -> Result<(String, String)> {
+    let secret_key = SecretKey::random(&mut thread_rng());
+    let public_key = secret_key.public_key();
+
+    let private_key_hex = hex::encode(secret_key.to_bytes());
+    let public_key_hex = hex::encode(public_key.to_sec1_bytes());
+
+    Ok((public_key_hex, private_key_hex))
 }

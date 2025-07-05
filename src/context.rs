@@ -185,7 +185,7 @@ impl AppCtx {
     pub fn add_color(&mut self, color: Color) {
         if !self.palettes.current_mut().palette.add(color) {
             let color_str = self.display_color(&color);
-            append_global_error(format!("Color {} already saved!", color_str));
+            append_global_error(format!("Color {color_str} already saved!"))
         } else {
             self.sidepanel.show = true;
         }

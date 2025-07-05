@@ -1,4 +1,4 @@
-use eframe::egui::{Button, Color32, ComboBox, Resize, ScrollArea, TextEdit, Ui};
+use eframe::egui::{Align, Button, Color32, ComboBox, Layout, Resize, ScrollArea, TextEdit, Ui};
 
 use crate::{
     context::FrameCtx,
@@ -40,22 +40,6 @@ impl CryptographyPanel {
         ui.horizontal(|ui| {
             ui.label("Operation:");
             match ctx.app.crypto.input.algorithm {
-                CryptoAlgorithm::ECDSA => {
-                    ComboBox::from_id_salt("crypto_operation")
-                        .selected_text(ctx.app.crypto.input.operation.to_string())
-                        .show_ui(ui, |ui| {
-                            ui.selectable_value(
-                                &mut ctx.app.crypto.input.operation,
-                                CryptoOperation::Sign,
-                                CryptoOperation::Sign.to_string(),
-                            );
-                            ui.selectable_value(
-                                &mut ctx.app.crypto.input.operation,
-                                CryptoOperation::Verify,
-                                CryptoOperation::Verify.to_string(),
-                            );
-                        });
-                }
                 CryptoAlgorithm::RSA => {
                     ComboBox::from_id_salt("crypto_operation")
                         .selected_text(ctx.app.crypto.input.operation.to_string())
@@ -131,23 +115,27 @@ impl CryptographyPanel {
                 if matches!(ctx.app.crypto.input.algorithm, CryptoAlgorithm::AES) {
                     ui.add_space(SPACE);
                     ui.label("Key Size:");
-                    let current_key_size =
-                        ctx.app.crypto.input.key_size.unwrap_or(AesKeySize::Aes256);
+                    let current_key_size = ctx
+                        .app
+                        .crypto
+                        .input
+                        .aes_key_size
+                        .unwrap_or(AesKeySize::Aes256);
                     ComboBox::from_id_salt("aes_key_size")
                         .selected_text(current_key_size.to_string())
                         .show_ui(ui, |ui| {
                             ui.selectable_value(
-                                &mut ctx.app.crypto.input.key_size,
+                                &mut ctx.app.crypto.input.aes_key_size,
                                 Some(AesKeySize::Aes128),
                                 AesKeySize::Aes128.to_string(),
                             );
                             ui.selectable_value(
-                                &mut ctx.app.crypto.input.key_size,
+                                &mut ctx.app.crypto.input.aes_key_size,
                                 Some(AesKeySize::Aes192),
                                 AesKeySize::Aes192.to_string(),
                             );
                             ui.selectable_value(
-                                &mut ctx.app.crypto.input.key_size,
+                                &mut ctx.app.crypto.input.aes_key_size,
                                 Some(AesKeySize::Aes256),
                                 AesKeySize::Aes256.to_string(),
                             );
@@ -164,7 +152,10 @@ impl CryptographyPanel {
             CryptoOperation::Encrypt | CryptoOperation::Sign
         ) && matches!(
             ctx.app.crypto.input.algorithm,
-            CryptoAlgorithm::AES | CryptoAlgorithm::DES | CryptoAlgorithm::TripleDES
+            CryptoAlgorithm::AES
+                | CryptoAlgorithm::DES
+                | CryptoAlgorithm::TripleDES
+                | CryptoAlgorithm::RSA
         ) {
             ui.horizontal(|ui| {
                 ui.label("Output Format:");
@@ -188,22 +179,22 @@ impl CryptographyPanel {
                 ui.add_space(HALF_SPACE);
                 if ui.button("Generate").clicked() {
                     if let Err(e) = ctx.app.crypto.generate_random_key() {
-                        ctx.app.crypto.error = Some(format!("Key generation failed: {}", e));
+                        ctx.app.crypto.error = Some(format!("Key generation failed: {e}"))
                     }
                 }
             });
 
             let key_hint = match ctx.app.crypto.input.algorithm {
-                CryptoAlgorithm::AES => match ctx.app.crypto.input.key_size {
+                CryptoAlgorithm::AES => match ctx.app.crypto.input.aes_key_size {
                     Some(size) => match size {
-                        AesKeySize::Aes128 => "16 bytes characters (32 hex characters)",
-                        AesKeySize::Aes192 => "24 bytes characters (48 hex characters)",
-                        AesKeySize::Aes256 => "32 bytes characters (64 hex characters)",
+                        AesKeySize::Aes128 => "16 bytes characters",
+                        AesKeySize::Aes192 => "24 bytes characters",
+                        AesKeySize::Aes256 => "32 bytes characters",
                     },
                     None => "Select key size first",
                 },
-                CryptoAlgorithm::DES => "8 bytes characters (16 hex characters)",
-                CryptoAlgorithm::TripleDES => "24 bytes characters (48 hex characters)",
+                CryptoAlgorithm::DES => "8 bytes characters",
+                CryptoAlgorithm::TripleDES => "24 bytes characters",
                 _ => "",
             };
 
@@ -232,16 +223,14 @@ impl CryptographyPanel {
                     ui.add_space(HALF_SPACE);
                     if ui.button("Generate").clicked() {
                         if let Err(e) = ctx.app.crypto.generate_random_iv() {
-                            ctx.app.crypto.error = Some(format!("IV generation failed: {}", e));
+                            ctx.app.crypto.error = Some(format!("IV generation failed: {e}"))
                         }
                     }
                 });
 
                 let iv_hint = match ctx.app.crypto.input.algorithm {
-                    CryptoAlgorithm::AES => "32 hex characters (16 bytes)",
-                    CryptoAlgorithm::DES | CryptoAlgorithm::TripleDES => {
-                        "16 hex characters (8 bytes)"
-                    }
+                    CryptoAlgorithm::AES => "16 bytes",
+                    CryptoAlgorithm::DES | CryptoAlgorithm::TripleDES => "8 bytes",
                     _ => "",
                 };
 
@@ -264,115 +253,114 @@ impl CryptographyPanel {
             }
         } else {
             // Asymmetric key inputs
-            match ctx.app.crypto.input.operation {
-                CryptoOperation::Encrypt | CryptoOperation::Verify => {
-                    ui.horizontal(|ui| {
-                        ui.label("Public Key:");
-                        ui.add_space(HALF_SPACE);
-                        if ui.button("Generate Keypair").clicked() {
-                            if let Err(e) = ctx.app.crypto.generate_random_key() {
-                                ctx.app.crypto.error =
-                                    Some(format!("Keypair generation failed: {}", e));
-                            }
-                        }
-                    });
+            ui.horizontal(|ui| {
+                if ui.button("Generate Keypair").clicked() {
+                    if let Err(e) = ctx.app.crypto.generate_random_key() {
+                        ctx.app.crypto.error = Some(format!("Keypair generation failed: {}", e));
+                    }
+                }
+            });
 
-                    let mut public_key =
-                        ctx.app.crypto.input.public_key.clone().unwrap_or_default();
-                    let hint = match ctx.app.crypto.input.algorithm {
-                        CryptoAlgorithm::RSA => "PEM format RSA public key",
-                        CryptoAlgorithm::ECDSA => "Hex encoded public key",
-                        _ => "",
-                    };
+            let mut public_key = ctx.app.crypto.input.public_key.clone().unwrap_or_default();
+            let hint = match ctx.app.crypto.input.algorithm {
+                CryptoAlgorithm::RSA => "PEM format RSA public key",
+                _ => "",
+            };
+
+            ui.horizontal(|ui| {
+                ui.vertical(|ui| {
+                    ui.label("Public Key:");
+                    ui.add_space(HALF_SPACE);
 
                     Resize::default()
                         .id_salt("public_key_input")
-                        .default_width(200.0)
-                        .max_height(SPACE)
-                        .max_width(200.0)
+                        .default_width(300.0)
+                        .max_height(300.0)
                         .show(ui, |ui| {
-                            ScrollArea::horizontal()
+                            ScrollArea::vertical()
                                 .id_salt("public_key_input_scroll")
-                                .max_height(ui.available_height() * 0.1)
+                                .stick_to_bottom(false)
+                                .drag_to_scroll(false)
                                 .show(ui, |ui| {
-                                    ui.add(
-                                        TextEdit::multiline(&mut public_key)
-                                            .hint_text(hint)
-                                            .desired_rows(6)
-                                            .desired_width(ui.available_width()),
+                                    ui.with_layout(
+                                        Layout::top_down(Align::Min)
+                                            .with_main_justify(true)
+                                            .with_cross_justify(true),
+                                        |ui| {
+                                            ui.add(
+                                                TextEdit::multiline(&mut public_key)
+                                                    .hint_text(hint),
+                                            );
+                                        },
                                     );
                                 });
                         });
+                });
 
-                    ctx.app.crypto.input.public_key = if public_key.is_empty() {
-                        None
-                    } else {
-                        Some(public_key)
-                    };
-                }
-                CryptoOperation::Decrypt | CryptoOperation::Sign => {
-                    ui.horizontal(|ui| {
-                        ui.label("Private Key:");
-                        ui.add_space(HALF_SPACE);
-                        if ui.button("Generate Keypair").clicked() {
-                            if let Err(e) = ctx.app.crypto.generate_random_key() {
-                                ctx.app.crypto.error =
-                                    Some(format!("Keypair generation failed: {}", e));
-                            }
-                        }
-                    });
+                ctx.app.crypto.input.public_key = if public_key.is_empty() {
+                    None
+                } else {
+                    Some(public_key)
+                };
 
-                    let mut private_key =
-                        ctx.app.crypto.input.private_key.clone().unwrap_or_default();
-                    let hint = match ctx.app.crypto.input.algorithm {
-                        CryptoAlgorithm::RSA => "PEM format RSA private key",
-                        CryptoAlgorithm::ECDSA => "Hex encoded private key",
-                        _ => "",
-                    };
+                let mut private_key = ctx.app.crypto.input.private_key.clone().unwrap_or_default();
+                let hint = match ctx.app.crypto.input.algorithm {
+                    CryptoAlgorithm::RSA => "PEM format RSA private key",
+                    _ => "",
+                };
+
+                ui.vertical(|ui| {
+                    ui.label("Private Key:");
+                    ui.add_space(HALF_SPACE);
 
                     Resize::default()
                         .id_salt("private_key_input")
-                        .default_width(200.0)
-                        .max_height(SPACE)
-                        .max_width(200.0)
+                        .default_width(300.0)
+                        .max_height(300.0)
                         .show(ui, |ui| {
-                            ScrollArea::horizontal()
+                            ScrollArea::vertical()
                                 .id_salt("private_key_input_scroll")
-                                .max_height(ui.available_height() * 0.1)
+                                .stick_to_bottom(false)
+                                .drag_to_scroll(false)
                                 .show(ui, |ui| {
-                                    ui.add(
-                                        TextEdit::multiline(&mut private_key)
-                                            .hint_text(hint)
-                                            .desired_rows(6)
-                                            .desired_width(ui.available_width()),
+                                    ui.with_layout(
+                                        Layout::top_down(Align::Min)
+                                            .with_main_justify(true)
+                                            .with_cross_justify(true),
+                                        |ui| {
+                                            ui.add(
+                                                TextEdit::multiline(&mut private_key)
+                                                    .hint_text(hint),
+                                            );
+                                        },
                                     );
                                 });
                         });
+                });
 
-                    ctx.app.crypto.input.private_key = if private_key.is_empty() {
-                        None
-                    } else {
-                        Some(private_key)
-                    };
-                }
-            }
-
-            // Signature input for verification
-            if ctx.app.crypto.input.operation == CryptoOperation::Verify {
-                ui.add_space(HALF_SPACE);
-                ui.label("Signature (hex):");
-                let mut signature = ctx.app.crypto.input.signature.clone().unwrap_or_default();
-                ui.add(
-                    TextEdit::multiline(&mut signature)
-                        .hint_text("Hex encoded signature")
-                        .desired_width(ui.available_width()),
-                );
-                ctx.app.crypto.input.signature = if signature.is_empty() {
+                ctx.app.crypto.input.private_key = if private_key.is_empty() {
                     None
                 } else {
-                    Some(signature)
+                    Some(private_key)
                 };
-            }
+
+                // Signature input for verification
+                if ctx.app.crypto.input.operation == CryptoOperation::Verify {
+                    ui.add_space(HALF_SPACE);
+                    ui.label("Signature (hex):");
+                    let mut signature = ctx.app.crypto.input.signature.clone().unwrap_or_default();
+                    ui.add(
+                        TextEdit::multiline(&mut signature)
+                            .hint_text("Hex encoded signature")
+                            .desired_width(ui.available_width()),
+                    );
+                    ctx.app.crypto.input.signature = if signature.is_empty() {
+                        None
+                    } else {
+                        Some(signature)
+                    };
+                }
+            });
         }
     }
 

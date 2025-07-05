@@ -1,6 +1,6 @@
 mod app;
 mod context;
-mod core;
+pub mod core;
 mod platform;
 mod settings;
 mod types;

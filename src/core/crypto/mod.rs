@@ -3,12 +3,8 @@ pub mod symmetric;
 
 use anyhow::{anyhow, Result};
 use asymmetric::{
-    ecdsa::{ecdsa_sign, ecdsa_verify},
     generate_des_iv, generate_des_key, generate_triple_des_key,
-    rsa::{
-        generate_ecdsa_keypair, generate_rsa_keypair, rsa_decrypt, rsa_encrypt, rsa_sign,
-        rsa_verify,
-    },
+    rsa::{generate_rsa_keypair, rsa_decrypt, rsa_encrypt, rsa_sign, rsa_verify},
 };
 use base64::{self, Engine};
 use hex;
@@ -30,7 +26,6 @@ pub enum CryptoAlgorithm {
     DES,
     TripleDES,
     RSA,
-    ECDSA,
 }
 
 impl fmt::Display for CryptoAlgorithm {
@@ -40,7 +35,6 @@ impl fmt::Display for CryptoAlgorithm {
             CryptoAlgorithm::DES => write!(f, "DES"),
             CryptoAlgorithm::TripleDES => write!(f, "Triple DES"),
             CryptoAlgorithm::RSA => write!(f, "RSA"),
-            CryptoAlgorithm::ECDSA => write!(f, "ECDSA"),
         }
     }
 }
@@ -52,7 +46,6 @@ impl CryptoAlgorithm {
             CryptoAlgorithm::DES,
             CryptoAlgorithm::TripleDES,
             CryptoAlgorithm::RSA,
-            CryptoAlgorithm::ECDSA,
         ]
     }
 
@@ -143,10 +136,11 @@ pub struct CryptoInput {
     pub mode: Option<CipherMode>,
     pub input_text: String,
     pub key: String,
-    pub key_size: Option<AesKeySize>, // Only for AES
-    pub iv: Option<String>,           // Initialization Vector for CBC mode
-    pub public_key: Option<String>,   // For asymmetric algorithms
-    pub private_key: Option<String>,  // For asymmetric algorithms
+    pub aes_key_size: Option<AesKeySize>, // Key size for AES (128, 192, or 256 bits)
+    pub iv: Option<String>,               // Initialization Vector for CBC mode
+    pub public_key: Option<String>,       // For asymmetric algorithms
+    pub private_key: Option<String>,      // For asymmetric algorithms
+    pub rsa_key_size: usize,              // Key size for RSA (e.g., 2048 bits)
     pub signature: Option<String>,
     pub encoding: OutputEncoding,
 }
@@ -159,10 +153,11 @@ impl Default for CryptoInput {
             mode: Some(CipherMode::CBC),
             input_text: String::new(),
             key: String::new(),
-            key_size: Some(AesKeySize::Aes128),
+            aes_key_size: Some(AesKeySize::Aes128),
             iv: None,
             public_key: None,
             private_key: None,
+            rsa_key_size: 2048,
             signature: None,
             encoding: OutputEncoding::default(),
         }
@@ -189,7 +184,6 @@ impl CryptographyProcessor {
             CryptoAlgorithm::DES => self.process_des(),
             CryptoAlgorithm::TripleDES => self.process_triple_des(),
             CryptoAlgorithm::RSA => self.process_rsa(),
-            CryptoAlgorithm::ECDSA => self.process_ecdsa(),
         };
 
         match result {
@@ -208,7 +202,7 @@ impl CryptographyProcessor {
 
     fn process_aes(&self) -> Result<String> {
         let mode = self.input.mode.unwrap_or(CipherMode::CBC);
-        let key_size = self.input.key_size.unwrap_or(AesKeySize::Aes128);
+        let key_size = self.input.aes_key_size.unwrap_or(AesKeySize::Aes128);
         match self.input.operation {
             CryptoOperation::Encrypt => {
                 let encrypted_bytes = aes_encrypt(
@@ -307,7 +301,14 @@ impl CryptographyProcessor {
                     .public_key
                     .as_ref()
                     .ok_or_else(|| anyhow!("Public key required for RSA encryption"))?;
-                rsa_encrypt(&self.input.input_text, public_key)
+                let encrypted_bytes = rsa_encrypt(&self.input.input_text, public_key)?;
+
+                match self.input.encoding {
+                    OutputEncoding::Hex => Ok(hex::encode(encrypted_bytes)),
+                    OutputEncoding::Base64 => {
+                        Ok(base64::engine::general_purpose::STANDARD.encode(encrypted_bytes))
+                    }
+                }
             }
             CryptoOperation::Decrypt => {
                 let private_key = self
@@ -323,7 +324,14 @@ impl CryptographyProcessor {
                     .private_key
                     .as_ref()
                     .ok_or_else(|| anyhow!("Private key required for RSA signing"))?;
-                rsa_sign(&self.input.input_text, private_key)
+                let signed_bytes = rsa_sign(&self.input.input_text, private_key)?;
+
+                match self.input.encoding {
+                    OutputEncoding::Hex => Ok(hex::encode(signed_bytes)),
+                    OutputEncoding::Base64 => {
+                        Ok(base64::engine::general_purpose::STANDARD.encode(signed_bytes))
+                    }
+                }
             }
             CryptoOperation::Verify => {
                 let public_key = self
@@ -341,37 +349,6 @@ impl CryptographyProcessor {
             }
         }
     }
-
-    fn process_ecdsa(&self) -> Result<String> {
-        match self.input.operation {
-            CryptoOperation::Sign => {
-                let private_key = self
-                    .input
-                    .private_key
-                    .as_ref()
-                    .ok_or_else(|| anyhow!("Private key required for ECDSA signing"))?;
-                ecdsa_sign(&self.input.input_text, private_key)
-            }
-            CryptoOperation::Verify => {
-                let public_key = self
-                    .input
-                    .public_key
-                    .as_ref()
-                    .ok_or_else(|| anyhow!("Public key required for ECDSA verification"))?;
-                let signature = self
-                    .input
-                    .signature
-                    .as_ref()
-                    .ok_or_else(|| anyhow!("Signature required for ECDSA verification"))?;
-                let is_valid = ecdsa_verify(&self.input.input_text, signature, public_key)?;
-                Ok(format!("Signature valid: {is_valid}"))
-            }
-            _ => Err(anyhow!(
-                "ECDSA only supports signing and verification operations"
-            )),
-        }
-    }
-
     pub fn clear_output(&mut self) {
         self.output.clear();
         self.error = None;
@@ -381,19 +358,13 @@ impl CryptographyProcessor {
         let key = match self.input.algorithm {
             CryptoAlgorithm::AES => generate_aes_key(
                 self.input
-                    .key_size
+                    .aes_key_size
                     .ok_or(anyhow!("Key size is required for AES"))?,
             ),
             CryptoAlgorithm::DES => generate_des_key(),
             CryptoAlgorithm::TripleDES => generate_triple_des_key(),
             CryptoAlgorithm::RSA => {
-                let (public_key, private_key) = generate_rsa_keypair()?;
-                self.input.public_key = Some(public_key);
-                self.input.private_key = Some(private_key.clone());
-                return Ok(());
-            }
-            CryptoAlgorithm::ECDSA => {
-                let (public_key, private_key) = generate_ecdsa_keypair()?;
+                let (public_key, private_key) = generate_rsa_keypair(self.input.rsa_key_size)?;
                 self.input.public_key = Some(public_key);
                 self.input.private_key = Some(private_key.clone());
                 return Ok(());

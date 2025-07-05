@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
+use base64::Engine;
 use hex;
-use p256::SecretKey;
 use rand::thread_rng;
 use rsa::pkcs1::{DecodeRsaPrivateKey, DecodeRsaPublicKey};
 use rsa::pkcs8::{DecodePrivateKey, DecodePublicKey, EncodePrivateKey, EncodePublicKey};
@@ -8,7 +8,7 @@ use rsa::{Pkcs1v15Encrypt, Pkcs1v15Sign, RsaPrivateKey, RsaPublicKey};
 use sha2::{Digest, Sha256};
 
 // RSA Functions
-pub fn rsa_encrypt(plaintext: &str, public_key_pem: &str) -> Result<String> {
+pub fn rsa_encrypt(plaintext: &str, public_key_pem: &str) -> Result<Vec<u8>> {
     let public_key = if public_key_pem.starts_with("-----BEGIN PUBLIC KEY-----") {
         RsaPublicKey::from_public_key_pem(public_key_pem)
             .map_err(|e| anyhow!("Failed to parse public key (PKCS#8): {}", e))?
@@ -24,7 +24,7 @@ pub fn rsa_encrypt(plaintext: &str, public_key_pem: &str) -> Result<String> {
         .encrypt(&mut thread_rng(), Pkcs1v15Encrypt, plaintext_bytes)
         .map_err(|e| anyhow!("RSA encryption failed: {}", e))?;
 
-    Ok(hex::encode(ciphertext))
+    Ok(ciphertext)
 }
 
 pub fn rsa_decrypt(ciphertext: &str, private_key_pem: &str) -> Result<String> {
@@ -38,8 +38,9 @@ pub fn rsa_decrypt(ciphertext: &str, private_key_pem: &str) -> Result<String> {
         return Err(anyhow!("Invalid private key format. Must be PEM format."));
     };
 
-    let ciphertext_bytes =
-        hex::decode(ciphertext).map_err(|_| anyhow!("Invalid hex ciphertext format"))?;
+    let ciphertext_bytes = hex::decode(ciphertext)
+        .or_else(|_| base64::engine::general_purpose::STANDARD.decode(ciphertext))
+        .map_err(|_| anyhow!("Invalid ciphertext format - must be valid hex or base64"))?;
 
     let plaintext = private_key
         .decrypt(Pkcs1v15Encrypt, &ciphertext_bytes)
@@ -48,7 +49,7 @@ pub fn rsa_decrypt(ciphertext: &str, private_key_pem: &str) -> Result<String> {
     String::from_utf8(plaintext).map_err(|e| anyhow!("Invalid UTF-8 in decrypted text: {}", e))
 }
 
-pub fn rsa_sign(message: &str, private_key_pem: &str) -> Result<String> {
+pub fn rsa_sign(message: &str, private_key_pem: &str) -> Result<Vec<u8>> {
     let private_key = if private_key_pem.starts_with("-----BEGIN PRIVATE KEY-----") {
         RsaPrivateKey::from_pkcs8_pem(private_key_pem)
             .map_err(|e| anyhow!("Failed to parse private key (PKCS#8): {}", e))?
@@ -68,7 +69,7 @@ pub fn rsa_sign(message: &str, private_key_pem: &str) -> Result<String> {
         .sign(Pkcs1v15Sign::new::<Sha256>(), &hash)
         .map_err(|e| anyhow!("RSA signing failed: {}", e))?;
 
-    Ok(hex::encode(signature))
+    Ok(signature)
 }
 
 pub fn rsa_verify(message: &str, signature_hex: &str, public_key_pem: &str) -> Result<bool> {
@@ -96,9 +97,15 @@ pub fn rsa_verify(message: &str, signature_hex: &str, public_key_pem: &str) -> R
     }
 }
 // Key generation functions
-pub fn generate_rsa_keypair() -> Result<(String, String)> {
+pub fn generate_rsa_keypair(key_size_bits: usize) -> Result<(String, String)> {
     let mut rng = thread_rng();
-    let bits = 2048;
+    let bits = key_size_bits;
+
+    if !(512..=16384).contains(&bits) {
+        return Err(anyhow!(
+            "Invalid RSA key size. Must be between 512 and 16384 bits."
+        ));
+    }
     let private_key = RsaPrivateKey::new(&mut rng, bits)
         .map_err(|e| anyhow!("Failed to generate RSA keypair: {}", e))?;
 
@@ -113,14 +120,4 @@ pub fn generate_rsa_keypair() -> Result<(String, String)> {
         .map_err(|e| anyhow!("Failed to encode public key: {}", e))?;
 
     Ok((public_key_pem, private_key_pem.to_string()))
-}
-
-pub fn generate_ecdsa_keypair() -> Result<(String, String)> {
-    let secret_key = SecretKey::random(&mut thread_rng());
-    let public_key = secret_key.public_key();
-
-    let private_key_hex = hex::encode(secret_key.to_bytes());
-    let public_key_hex = hex::encode(public_key.to_sec1_bytes());
-
-    Ok((public_key_hex, private_key_hex))
 }

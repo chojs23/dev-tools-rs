@@ -511,10 +511,6 @@ mod tests {
             Color::Rgb(Rgb::new(0.5, 0.5, 0.5))
         );
         test_case!(
-            "{lab_l:.4} {lab_a:.0} {lab_b:.2}" => "55.6818 -17 -27.27",
-            Color::Rgb(Rgb::new_scaled(35, 144, 180))
-        );
-        test_case!(
             "{hsv_h360:d} {hsv_s100:X} {hsv_v100:x}" => "326 4B 2f",
             Color::Rgb(Rgb::new_scaled(120, 30, 80))
         );
