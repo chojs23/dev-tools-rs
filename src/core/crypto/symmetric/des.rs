@@ -70,7 +70,7 @@ pub fn des_encrypt(
     key: &str,
     mode: CipherMode,
     iv: Option<&str>,
-) -> Result<String> {
+) -> Result<Vec<u8>> {
     validate_des_key(key)?;
 
     let key_bytes = key.as_bytes();
@@ -93,11 +93,11 @@ pub fn des_encrypt(
             };
 
             let ct = encrypt_des_cbc(plaintext_bytes, key_bytes, iv_bytes)?;
-            Ok(hex::encode(ct))
+            Ok(ct)
         }
         CipherMode::ECB => {
             let ct = encrypt_des_ecb(plaintext_bytes, key_bytes)?;
-            Ok(hex::encode(ct))
+            Ok(ct)
         }
     }
 }

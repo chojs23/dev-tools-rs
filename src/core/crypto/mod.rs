@@ -228,17 +228,8 @@ impl CryptographyProcessor {
                 }
             }
             CryptoOperation::Decrypt => {
-                // Handle decoding in CryptographyProcessor
-                let ciphertext_bytes = hex::decode(&self.input.input_text)
-                    .or_else(|_| {
-                        base64::engine::general_purpose::STANDARD.decode(&self.input.input_text)
-                    })
-                    .map_err(|_| {
-                        anyhow!("Invalid ciphertext format - must be valid hex or base64")
-                    })?;
-
                 let decrypted_bytes = aes_decrypt(
-                    &ciphertext_bytes,
+                    &self.input.input_text,
                     &self.input.key,
                     key_size,
                     mode,
@@ -255,12 +246,21 @@ impl CryptographyProcessor {
     fn process_des(&self) -> Result<String> {
         let mode = self.input.mode.unwrap_or(CipherMode::CBC);
         match self.input.operation {
-            CryptoOperation::Encrypt => des_encrypt(
-                &self.input.input_text,
-                &self.input.key,
-                mode,
-                self.input.iv.as_deref(),
-            ),
+            CryptoOperation::Encrypt => {
+                let encrypted_bytes = des_encrypt(
+                    &self.input.input_text,
+                    &self.input.key,
+                    mode,
+                    self.input.iv.as_deref(),
+                )?;
+
+                match self.input.encoding {
+                    OutputEncoding::Hex => Ok(hex::encode(encrypted_bytes)),
+                    OutputEncoding::Base64 => {
+                        Ok(base64::engine::general_purpose::STANDARD.encode(encrypted_bytes))
+                    }
+                }
+            }
             CryptoOperation::Decrypt => des_decrypt(
                 &self.input.input_text,
                 &self.input.key,
@@ -274,12 +274,21 @@ impl CryptographyProcessor {
     fn process_triple_des(&self) -> Result<String> {
         let mode = self.input.mode.unwrap_or(CipherMode::CBC);
         match self.input.operation {
-            CryptoOperation::Encrypt => triple_des_encrypt(
-                &self.input.input_text,
-                &self.input.key,
-                mode,
-                self.input.iv.as_deref(),
-            ),
+            CryptoOperation::Encrypt => {
+                let encrypted_bytes = triple_des_encrypt(
+                    &self.input.input_text,
+                    &self.input.key,
+                    mode,
+                    self.input.iv.as_deref(),
+                )?;
+
+                match self.input.encoding {
+                    OutputEncoding::Hex => Ok(hex::encode(encrypted_bytes)),
+                    OutputEncoding::Base64 => {
+                        Ok(base64::engine::general_purpose::STANDARD.encode(encrypted_bytes))
+                    }
+                }
+            }
             CryptoOperation::Decrypt => triple_des_decrypt(
                 &self.input.input_text,
                 &self.input.key,
