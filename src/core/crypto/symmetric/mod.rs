@@ -17,15 +17,7 @@ pub fn generate_aes_key(key_size: AesKeySize) -> String {
     thread_rng().fill_bytes(&mut key);
 
     key.into_iter()
-        .map(|b| format!("{:02x}", b)) // Convert to hex format
-        .collect::<String>()
-}
-
-pub fn generate_rc4_key() -> String {
-    let mut key = [0u8; 16 / 2]; // 128-bit key
-    thread_rng().fill_bytes(&mut key);
-    key.into_iter()
-        .map(|b| format!("{:02x}", b))
+        .map(|b| format!("{b:02x}"))
         .collect::<String>()
 }
 
@@ -33,6 +25,6 @@ pub fn generate_aes_iv() -> String {
     let mut iv = [0u8; 16 / 2];
     thread_rng().fill_bytes(&mut iv);
     iv.into_iter()
-        .map(|b| format!("{:02x}", b))
+        .map(|b| format!("{b:02x}"))
         .collect::<String>()
 }

@@ -1,12 +1,6 @@
 use anyhow::{anyhow, Result};
 use hex;
-use p256::{
-    ecdsa::{
-        signature::{Signer, Verifier},
-        Signature, SigningKey, VerifyingKey,
-    },
-    PublicKey, SecretKey,
-};
+use p256::SecretKey;
 use rand::thread_rng;
 use rsa::pkcs1::{DecodeRsaPrivateKey, DecodeRsaPublicKey};
 use rsa::pkcs8::{DecodePrivateKey, DecodePublicKey, EncodePrivateKey, EncodePublicKey};

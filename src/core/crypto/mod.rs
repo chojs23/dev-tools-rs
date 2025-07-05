@@ -337,7 +337,7 @@ impl CryptographyProcessor {
                     .as_ref()
                     .ok_or_else(|| anyhow!("Signature required for RSA verification"))?;
                 let is_valid = rsa_verify(&self.input.input_text, signature, public_key)?;
-                Ok(format!("Signature valid: {}", is_valid))
+                Ok(format!("Signature valid: {is_valid}"))
             }
         }
     }
@@ -364,7 +364,7 @@ impl CryptographyProcessor {
                     .as_ref()
                     .ok_or_else(|| anyhow!("Signature required for ECDSA verification"))?;
                 let is_valid = ecdsa_verify(&self.input.input_text, signature, public_key)?;
-                Ok(format!("Signature valid: {}", is_valid))
+                Ok(format!("Signature valid: {is_valid}"))
             }
             _ => Err(anyhow!(
                 "ECDSA only supports signing and verification operations"

@@ -27,16 +27,19 @@ impl InputOutputBox {
         self
     }
 
+    #[allow(dead_code)]
     pub fn with_output_hint(mut self, hint: &str) -> Self {
         self.output_hint = Some(hint.to_string());
         self
     }
 
+    #[allow(dead_code)]
     pub fn with_input_rows(mut self, rows: usize) -> Self {
         self.input_rows = rows;
         self
     }
 
+    #[allow(dead_code)]
     pub fn with_output_rows(mut self, rows: usize) -> Self {
         self.output_rows = rows;
         self

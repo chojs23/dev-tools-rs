@@ -1,7 +1,7 @@
 use std::sync::{Arc, RwLock};
 
 use eframe::{
-    egui::{self, Margin, Theme, Ui, Visuals},
+    egui::{self, Margin, Theme, Visuals},
     CreationContext,
 };
 use once_cell::sync::{Lazy, OnceCell};
