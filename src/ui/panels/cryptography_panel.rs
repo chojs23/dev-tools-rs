@@ -4,6 +4,7 @@ use crate::{
     context::FrameCtx,
     core::crypto::{
         symmetric::aes::AesKeySize, CipherMode, CryptoAlgorithm, CryptoOperation, OutputEncoding,
+        RsaKeySize,
     },
     ui::{
         components::{input_output_box::InputOutputBox, DOUBLE_SPACE, HALF_SPACE, SPACE},
@@ -141,6 +142,32 @@ impl CryptographyPanel {
                             );
                         });
                 }
+            });
+        } else if matches!(ctx.app.crypto.input.algorithm, CryptoAlgorithm::RSA) {
+            // Add RSA key size selection and cipher type display
+            ui.horizontal(|ui| {
+                ui.label("Cipher Type:");
+                ui.label("RSA/ECB/PKCS1");
+                
+                ui.add_space(SPACE);
+                ui.label("Key Size:");
+                let current_key_size = ctx
+                    .app
+                    .crypto
+                    .input
+                    .rsa_key_size
+                    .unwrap_or(RsaKeySize::Rsa2048);
+                ComboBox::from_id_salt("rsa_key_size")
+                    .selected_text(current_key_size.to_string())
+                    .show_ui(ui, |ui| {
+                        for key_size in RsaKeySize::variants() {
+                            ui.selectable_value(
+                                &mut ctx.app.crypto.input.rsa_key_size,
+                                Some(*key_size),
+                                key_size.to_string(),
+                            );
+                        }
+                    });
             });
         }
     }

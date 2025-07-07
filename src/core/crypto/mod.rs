@@ -17,6 +17,55 @@ use symmetric::{
     tdes::{triple_des_decrypt, triple_des_encrypt},
 };
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum RsaKeySize {
+    Rsa512,
+    Rsa1024,
+    Rsa2048,
+    Rsa3072,
+    Rsa4096,
+}
+
+impl fmt::Display for RsaKeySize {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            RsaKeySize::Rsa512 => write!(f, "512 bits"),
+            RsaKeySize::Rsa1024 => write!(f, "1024 bits"),
+            RsaKeySize::Rsa2048 => write!(f, "2048 bits"),
+            RsaKeySize::Rsa3072 => write!(f, "3072 bits"),
+            RsaKeySize::Rsa4096 => write!(f, "4096 bits"),
+        }
+    }
+}
+
+impl RsaKeySize {
+    pub fn variants() -> &'static [RsaKeySize] {
+        &[
+            RsaKeySize::Rsa512,
+            RsaKeySize::Rsa1024,
+            RsaKeySize::Rsa2048,
+            RsaKeySize::Rsa3072,
+            RsaKeySize::Rsa4096,
+        ]
+    }
+
+    pub fn to_bits(&self) -> usize {
+        match self {
+            RsaKeySize::Rsa512 => 512,
+            RsaKeySize::Rsa1024 => 1024,
+            RsaKeySize::Rsa2048 => 2048,
+            RsaKeySize::Rsa3072 => 3072,
+            RsaKeySize::Rsa4096 => 4096,
+        }
+    }
+}
+
+impl Default for RsaKeySize {
+    fn default() -> Self {
+        RsaKeySize::Rsa2048
+    }
+}
+
 use crate::core::crypto::symmetric::aes::{aes_decrypt, aes_encrypt};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -140,7 +189,7 @@ pub struct CryptoInput {
     pub iv: Option<String>,               // Initialization Vector for CBC mode
     pub public_key: Option<String>,       // For asymmetric algorithms
     pub private_key: Option<String>,      // For asymmetric algorithms
-    pub rsa_key_size: usize,              // Key size for RSA (e.g., 2048 bits)
+    pub rsa_key_size: Option<RsaKeySize>, // Key size for RSA (512, 1024, 2048, 3072, 4096 bits)
     pub signature: Option<String>,
     pub encoding: OutputEncoding,
 }
@@ -157,7 +206,7 @@ impl Default for CryptoInput {
             iv: None,
             public_key: None,
             private_key: None,
-            rsa_key_size: 2048,
+            rsa_key_size: Some(RsaKeySize::Rsa2048),
             signature: None,
             encoding: OutputEncoding::default(),
         }
@@ -364,7 +413,8 @@ impl CryptographyProcessor {
             CryptoAlgorithm::DES => generate_des_key(),
             CryptoAlgorithm::TripleDES => generate_triple_des_key(),
             CryptoAlgorithm::RSA => {
-                let (public_key, private_key) = generate_rsa_keypair(self.input.rsa_key_size)?;
+                let key_size = self.input.rsa_key_size.unwrap_or(RsaKeySize::Rsa2048);
+                let (public_key, private_key) = generate_rsa_keypair(key_size.to_bits())?;
                 self.input.public_key = Some(public_key);
                 self.input.private_key = Some(private_key.clone());
                 return Ok(());
