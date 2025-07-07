@@ -1,4 +1,4 @@
-use eframe::egui::{Align, Button, Color32, ComboBox, Layout, Resize, ScrollArea, TextEdit, Ui};
+use eframe::egui::{Align, Button, Color32, ComboBox, Layout, Resize, ScrollArea, TextEdit, Ui, Spinner};
 
 use crate::{
     context::FrameCtx,
@@ -281,12 +281,39 @@ impl CryptographyPanel {
         } else {
             // Asymmetric key inputs
             ui.horizontal(|ui| {
-                if ui.button("Generate Keypair").clicked() {
-                    if let Err(e) = ctx.app.crypto.generate_random_key() {
-                        ctx.app.crypto.error = Some(format!("Keypair generation failed: {}", e));
+                // Check for key generation progress
+                ctx.app.crypto.check_key_generation_progress();
+                
+                if ctx.app.crypto.is_key_generation_in_progress() {
+                    ui.add(Spinner::new());
+                    ui.label("Generating RSA keypair...");
+                    
+                    // Request repaint to keep UI responsive
+                    ctx.egui.request_repaint();
+                } else {
+                    let button_text = if ctx.app.crypto.is_key_generation_complete() {
+                        "Generate New Keypair"
+                    } else {
+                        "Generate Keypair"
+                    };
+                    
+                    if ui.button(button_text).clicked() {
+                        ctx.app.crypto.reset_key_generation_state();
+                        if let Err(e) = ctx.app.crypto.generate_random_key() {
+                            ctx.app.crypto.error = Some(format!("Keypair generation failed: {}", e));
+                        }
                     }
                 }
             });
+            
+            // Show key generation status
+            if let crate::core::crypto::KeyGenerationState::Failed(error) = &ctx.app.crypto.key_generation_state {
+                ui.add_space(HALF_SPACE);
+                ui.colored_label(Color32::RED, format!("Key generation failed: {}", error));
+            } else if ctx.app.crypto.key_generation_state == crate::core::crypto::KeyGenerationState::Completed {
+                ui.add_space(HALF_SPACE);
+                ui.colored_label(Color32::from_rgb(0, 180, 0), "✓ RSA keypair generated successfully");
+            }
 
             let mut public_key = ctx.app.crypto.input.public_key.clone().unwrap_or_default();
             let hint = match ctx.app.crypto.input.algorithm {

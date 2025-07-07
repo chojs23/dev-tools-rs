@@ -10,6 +10,8 @@ use base64::{self, Engine};
 use hex;
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use std::sync::{Arc, Mutex};
+use std::sync::mpsc::Receiver;
 use symmetric::{
     aes::AesKeySize,
     des::{des_decrypt, des_encrypt},
@@ -213,11 +215,57 @@ impl Default for CryptoInput {
     }
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum KeyGenerationState {
+    Idle,
+    Generating,
+    Completed,
+    Failed(String),
+}
+
+impl Default for KeyGenerationState {
+    fn default() -> Self {
+        KeyGenerationState::Idle
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct KeyGenerationResult {
+    pub public_key: String,
+    pub private_key: String,
+}
+
+#[derive(Debug)]
 pub struct CryptographyProcessor {
     pub input: CryptoInput,
     pub output: String,
     pub error: Option<String>,
+    pub key_generation_state: KeyGenerationState,
+    pub key_generation_receiver: Option<Arc<Mutex<Receiver<Result<KeyGenerationResult, String>>>>>,
+}
+
+impl Default for CryptographyProcessor {
+    fn default() -> Self {
+        Self {
+            input: CryptoInput::default(),
+            output: String::new(),
+            error: None,
+            key_generation_state: KeyGenerationState::default(),
+            key_generation_receiver: None,
+        }
+    }
+}
+
+impl Clone for CryptographyProcessor {
+    fn clone(&self) -> Self {
+        Self {
+            input: self.input.clone(),
+            output: self.output.clone(),
+            error: self.error.clone(),
+            key_generation_state: self.key_generation_state.clone(),
+            key_generation_receiver: None, // Can't clone receiver
+        }
+    }
 }
 
 impl CryptographyProcessor {
@@ -404,25 +452,103 @@ impl CryptographyProcessor {
     }
 
     pub fn generate_random_key(&mut self) -> Result<()> {
-        let key = match self.input.algorithm {
-            CryptoAlgorithm::AES => generate_aes_key(
-                self.input
-                    .aes_key_size
-                    .ok_or(anyhow!("Key size is required for AES"))?,
-            ),
-            CryptoAlgorithm::DES => generate_des_key(),
-            CryptoAlgorithm::TripleDES => generate_triple_des_key(),
-            CryptoAlgorithm::RSA => {
-                let key_size = self.input.rsa_key_size.unwrap_or(RsaKeySize::Rsa2048);
-                let (public_key, private_key) = generate_rsa_keypair(key_size.to_bits())?;
-                self.input.public_key = Some(public_key);
-                self.input.private_key = Some(private_key.clone());
-                return Ok(());
+        match self.input.algorithm {
+            CryptoAlgorithm::AES => {
+                let key = generate_aes_key(
+                    self.input
+                        .aes_key_size
+                        .ok_or(anyhow!("Key size is required for AES"))?,
+                );
+                self.input.key = key;
+                Ok(())
             }
-        };
+            CryptoAlgorithm::DES => {
+                let key = generate_des_key();
+                self.input.key = key;
+                Ok(())
+            }
+            CryptoAlgorithm::TripleDES => {
+                let key = generate_triple_des_key();
+                self.input.key = key;
+                Ok(())
+            }
+            CryptoAlgorithm::RSA => {
+                self.start_async_key_generation()
+            }
+        }
+    }
 
-        self.input.key = key;
+    pub fn start_async_key_generation(&mut self) -> Result<()> {
+        // If already generating, don't start another thread
+        if self.key_generation_state == KeyGenerationState::Generating {
+            return Ok(());
+        }
+
+        let key_size = self.input.rsa_key_size.unwrap_or(RsaKeySize::Rsa2048);
+        let (sender, receiver) = std::sync::mpsc::channel();
+        
+        self.key_generation_state = KeyGenerationState::Generating;
+        self.key_generation_receiver = Some(Arc::new(Mutex::new(receiver)));
+
+        // Spawn thread for key generation
+        std::thread::spawn(move || {
+            let result = generate_rsa_keypair(key_size.to_bits())
+                .map(|(public_key, private_key)| KeyGenerationResult {
+                    public_key,
+                    private_key,
+                })
+                .map_err(|e| e.to_string());
+
+            let _ = sender.send(result);
+        });
+
         Ok(())
+    }
+
+    pub fn check_key_generation_progress(&mut self) {
+        let should_clear_receiver = if let Some(receiver_arc) = &self.key_generation_receiver {
+            if let Ok(receiver) = receiver_arc.try_lock() {
+                if let Ok(result) = receiver.try_recv() {
+                    match result {
+                        Ok(keys) => {
+                            self.input.public_key = Some(keys.public_key);
+                            self.input.private_key = Some(keys.private_key);
+                            self.key_generation_state = KeyGenerationState::Completed;
+                        }
+                        Err(error) => {
+                            self.key_generation_state = KeyGenerationState::Failed(error);
+                        }
+                    }
+                    true
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        } else {
+            false
+        };
+        
+        if should_clear_receiver {
+            self.key_generation_receiver = None;
+        }
+    }
+
+    pub fn is_key_generation_complete(&self) -> bool {
+        matches!(
+            self.key_generation_state,
+            KeyGenerationState::Completed | KeyGenerationState::Failed(_)
+        )
+    }
+
+    pub fn is_key_generation_in_progress(&self) -> bool {
+        matches!(self.key_generation_state, KeyGenerationState::Generating)
+    }
+
+    pub fn reset_key_generation_state(&mut self) {
+        self.key_generation_state = KeyGenerationState::Idle;
+        self.key_generation_receiver = None;
     }
 
     pub fn generate_random_iv(&mut self) -> Result<()> {
