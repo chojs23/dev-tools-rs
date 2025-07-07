@@ -1,4 +1,16 @@
-use eframe::egui::Ui;
+#![allow(unused_imports)]
+use crate::{
+    app::CURRENT_COLOR_BOX_SIZE,
+    context::FrameCtx,
+    platform::display_picker::{self, DisplayPickerExt},
+    types::error::append_global_error,
+    ui::components::{
+        colorbox::{ColorBox, COLORBOX_PICK_TOOLTIP},
+        icon,
+    },
+};
+
+use eframe::egui::{Button, CursorIcon, Ui};
 use std::rc::Rc;
 
 #[cfg(target_os = "linux")]
@@ -6,12 +18,6 @@ use x11rb::protocol::xproto;
 
 #[cfg(windows)]
 use crate::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
-use crate::{
-    app::CURRENT_COLOR_BOX_SIZE,
-    context::FrameCtx,
-    platform::display_picker::DisplayPickerExt,
-    ui::components::colorbox::{ColorBox, COLORBOX_PICK_TOOLTIP},
-};
 
 #[cfg(any(target_os = "linux"))]
 const ZOOM_IMAGE_WIDTH: u16 = ZOOM_WIN_WIDTH / ZOOM_SCALE as u16;
