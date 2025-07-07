@@ -66,11 +66,49 @@ Some of these features are work in progress.
 
 ## Installation
 
-### Download the latest release
+### Pre-built Binaries
 
-You can download the latest release from the [Releases page](https://github.com/chojs23/dev-tools-rs/releases)
+Download the latest release from the [Releases](https://github.com/chojs23/dev-tools-rs/releases) page:
 
-> **Note**: Currently only macOS ARM64 binaries are available. Windows and Linux builds will be added.
+- **macOS (Intel)**: `dev-tools-rs-x86_64-apple-darwin.tar.gz`
+- **macOS (Apple Silicon)**: `dev-tools-rs-aarch64-apple-darwin.tar.gz`
+- **Linux (x86_64)**: `dev-tools-rs-x86_64-unknown-linux-gnu.tar.gz`
+- **Windows (x86_64)**: `dev-tools-rs-x86_64-pc-windows-msvc.zip`
+
+#### macOS/Linux Installation
+
+```bash
+# Extract the archive
+tar -xzf dev-tools-rs-*.tar.gz
+
+# Make executable (if needed)
+chmod +x dev-tools-rs
+
+# Run the application
+./dev-tools-rs
+```
+
+#### Windows Installation
+
+```powershell
+# Extract the zip file
+# Run the application
+.\dev-tools-rs.exe
+```
+
+### Building from Source
+
+Ensure you have Rust installed on your system.
+
+```bash
+git clone https://github.com/chojs23/dev-tools-rs.git
+cd dev-tools-rs
+cargo build --release
+```
+
+The compiled binary will be available in `target/release/`.
+
+---
 
 ### Build from Source
 
