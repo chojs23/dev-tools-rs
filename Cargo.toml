@@ -1,6 +1,6 @@
 [package]
 name = "dev-tools-rs"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Neo <chojs990222@gmail.com>"]
 description = "A collection of QoL tools for development inspired by the Developer Tools IntelliJ Plugin, built with Rust and egui"
