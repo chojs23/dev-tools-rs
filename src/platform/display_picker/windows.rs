@@ -2,9 +2,10 @@
 
 use std::ptr::null;
 
-use crate::{color::Color, display_picker::DisplayPicker};
+use crate::core::color::Color;
+use crate::platform::display_picker::DisplayPicker;
 use anyhow::{Context, Error, Result};
-use egui::Color32;
+use eframe::egui::Color32;
 use windows::{
     core::PCWSTR,
     Win32::{

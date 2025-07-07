@@ -1,9 +1,10 @@
 #![cfg(unix)]
 use std::borrow::Cow;
 
-use crate::{color::Color, display_picker::DisplayPicker};
+use crate::core::color::Color;
+use crate::platform::display_picker::DisplayPicker;
 use anyhow::{Context, Result};
-use egui::Color32;
+use eframe::egui::Color32;
 use image::{imageops, ImageBuffer, Rgba};
 use x11rb::{
     connection::Connection,

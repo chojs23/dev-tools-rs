@@ -10,7 +10,7 @@ use crate::{
     },
 };
 
-use eframe::egui::{Button, CursorIcon, Ui};
+use eframe::egui::{self, Button, CursorIcon, Ui};
 use std::rc::Rc;
 
 #[cfg(target_os = "linux")]
