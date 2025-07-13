@@ -17,7 +17,7 @@ use std::rc::Rc;
 use x11rb::protocol::xproto;
 
 #[cfg(windows)]
-use crate::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
+use crate::platform::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
 
 #[cfg(any(target_os = "linux"))]
 const ZOOM_IMAGE_WIDTH: u16 = ZOOM_WIN_WIDTH / ZOOM_SCALE as u16;
