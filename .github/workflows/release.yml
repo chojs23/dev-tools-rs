@@ -19,6 +19,9 @@ jobs:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             binary_name: dev-tools-rs
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            binary_name: dev-tools-rs
           - target: x86_64-apple-darwin
             os: macos-latest
             binary_name: dev-tools-rs
@@ -119,6 +122,7 @@ jobs:
         with:
           files: |
             artifacts/dev-tools-rs-x86_64-unknown-linux-gnu/dev-tools-rs-x86_64-unknown-linux-gnu.tar.gz
+            artifacts/dev-tools-rs-aarch64-unknown-linux-gnu/dev-tools-rs-aarch64-unknown-linux-gnu.tar.gz
             artifacts/dev-tools-rs-x86_64-apple-darwin/dev-tools-rs-x86_64-apple-darwin.tar.gz
             artifacts/dev-tools-rs-aarch64-apple-darwin/dev-tools-rs-aarch64-apple-darwin.tar.gz
             artifacts/dev-tools-rs-x86_64-pc-windows-msvc/dev-tools-rs-x86_64-pc-windows-msvc.zip
@@ -133,6 +137,7 @@ jobs:
             ## Downloads
 
             - **Linux (x86_64)**: `dev-tools-rs-x86_64-unknown-linux-gnu.tar.gz`
+            - **Linux (ARM64)**: `dev-tools-rs-aarch64-unknown-linux-gnu.tar.gz`
             - **macOS (Intel)**: `dev-tools-rs-x86_64-apple-darwin.tar.gz`
             - **macOS (Apple Silicon)**: `dev-tools-rs-aarch64-apple-darwin.tar.gz`
             - **Windows (x86_64)**: `dev-tools-rs-x86_64-pc-windows-msvc.zip`
