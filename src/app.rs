@@ -12,7 +12,7 @@ use crate::{
     ui::{
         components::{colors::*, *},
         panels::{
-            color_picker_panel::ColorPickerPanel, cryptography_panel::CryptographyPanel,
+            claude_panel::ClaudePanel, color_picker_panel::ColorPickerPanel, cryptography_panel::CryptographyPanel,
             datetime_panel::DateTimePanel, encoding_panel::EncodingPanel,
             error_display::ErrorDisplay, generators_panel::GeneratorsPanel, jwt_panel::JwtPanel,
             regex_panel::RegexPanel, top_panel::TopPanel,
@@ -44,6 +44,7 @@ pub enum CentralPanelTab {
     Generators,
     DateTime,
     Cryptography,
+    Claude,
 }
 
 #[derive(Default)]
@@ -62,6 +63,7 @@ pub struct App {
     pub generators_panel: GeneratorsPanel,
     pub datetime_panel: DateTimePanel,
     pub cryptography_panel: CryptographyPanel,
+    pub claude_panel: ClaudePanel,
     pub error_display: ErrorDisplay,
 }
 
@@ -137,6 +139,7 @@ impl App {
             generators_panel: GeneratorsPanel::new(),
             datetime_panel: DateTimePanel::new(),
             cryptography_panel: CryptographyPanel::new(),
+            claude_panel: ClaudePanel::new(),
             error_display: ErrorDisplay::new(),
         });
 
@@ -234,6 +237,7 @@ impl App {
                 CentralPanelTab::Generators => self.generators_panel_ui(ctx, ui),
                 CentralPanelTab::DateTime => self.datetime_panel_ui(ctx, ui),
                 CentralPanelTab::Cryptography => self.cryptography_panel_ui(ctx, ui),
+                CentralPanelTab::Claude => self.claude_panel_ui(ctx, ui),
             });
     }
 
@@ -270,6 +274,11 @@ impl App {
     fn cryptography_panel_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut egui::Ui) {
         self.error_display.render(ctx, ui);
         self.cryptography_panel.display(ctx, ui);
+    }
+
+    fn claude_panel_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut egui::Ui) {
+        self.error_display.render(ctx, ui);
+        self.claude_panel.display(ctx, ui);
     }
 
     fn check_backtick_key_pressed(&mut self, ctx: &mut FrameCtx<'_>) {

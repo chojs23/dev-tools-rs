@@ -1,3 +1,4 @@
+pub mod claude;
 pub mod color;
 pub mod crypto;
 pub mod datetime;

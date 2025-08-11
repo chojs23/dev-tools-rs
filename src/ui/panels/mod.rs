@@ -1,3 +1,4 @@
+pub mod claude_panel;
 pub mod color_picker_panel;
 pub mod cryptography_panel;
 pub mod datetime_panel;
