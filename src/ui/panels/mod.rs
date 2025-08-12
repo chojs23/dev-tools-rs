@@ -4,6 +4,7 @@ pub mod datetime_panel;
 pub mod encoding_panel;
 pub mod error_display;
 pub mod generators_panel;
+pub mod image_panel;
 pub mod jwt_panel;
 pub mod regex_panel;
 pub mod top_panel;
