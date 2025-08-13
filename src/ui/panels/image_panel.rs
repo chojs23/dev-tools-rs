@@ -54,7 +54,8 @@ impl UiPanel for ImagePanel {
         let available_size = ui.available_size();
 
         ui.horizontal(|ui| {
-            ui.set_height(available_size.y);
+            ui.set_width(available_size.x - DOUBLE_SPACE);
+            ui.set_height(available_size.y - DOUBLE_SPACE);
             // Left panel
             ui.vertical(|ui| {
                 ui.set_width(300.0);
